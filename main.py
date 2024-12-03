@@ -1,9 +1,11 @@
 from PyQt5.QtWidgets import (
-    QApplication, QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout, QCheckBox, QSpacerItem, QSizePolicy
+    QApplication, QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout, QCheckBox, QSpacerItem, QSizePolicy,
+    QMessageBox
 )
 from PyQt5.QtGui import QFont, QPixmap
 from PyQt5.QtCore import Qt
 import sys
+import requests
 
 
 class RegistrationPage(QWidget):
@@ -39,6 +41,13 @@ class RegistrationPage(QWidget):
         self.username_input.setAlignment(Qt.AlignCenter)
         self.username_input.setStyleSheet("border-radius: 5px;")
 
+        self.password_input_confirmation = QLineEdit(self)
+        self.password_input_confirmation.setPlaceholderText("Подтвердить пароль")
+        self.password_input_confirmation.setEchoMode(QLineEdit.Password)
+        self.password_input_confirmation.setFixedSize(295, 40)
+        self.password_input_confirmation.setAlignment(Qt.AlignCenter)
+        self.password_input_confirmation.setStyleSheet("border-radius: 5px;")
+
         self.password_input = QLineEdit(self)
         self.password_input.setPlaceholderText("Пароль")
         self.password_input.setEchoMode(QLineEdit.Password)
@@ -52,11 +61,14 @@ class RegistrationPage(QWidget):
         self.register_button.setStyleSheet(
             "background-color: #E50914; color: white; font-size: 16px; border: none; border-radius: 5px;"
         )
-
+    
         # Капча (ссылка на реCAPTCHA, заменить на реальную капчу)
         self.recaptcha_checkbox = QCheckBox("I'm not a robot", self)
         self.recaptcha_checkbox.setStyleSheet("color: white;")
 
+        # Обработчик нажатия кнопки регистрации
+        self.register_button.clicked.connect(self.register)
+        
         # Кнопка назад
         self.back_button = QPushButton("Назад", self)
         self.back_button.setFixedSize(295, 40)
@@ -72,6 +84,7 @@ class RegistrationPage(QWidget):
         form_layout.addSpacing(20)
         form_layout.addWidget(self.username_input)
         form_layout.addWidget(self.password_input)
+        form_layout.addWidget(self.password_input_confirmation)
         form_layout.addWidget(self.register_button)
         form_layout.addWidget(self.recaptcha_checkbox)
         form_layout.addWidget(self.back_button)
@@ -88,6 +101,47 @@ class RegistrationPage(QWidget):
         self.login_page = LoginPage()
         self.login_page.show()
         self.close()
+
+    def register(self):
+        if not self.recaptcha_checkbox.isChecked():
+            QMessageBox.warning(self, 'Ошибка', 'Подтвердите, что вы не робот')
+            return
+
+        # Обработка регистрации
+        username = self.username_input.text()
+        password = self.password_input.text()
+        password_confirmation = self.password_input_confirmation.text()
+
+        # Отправка запроса на сервер Flask для регистрации
+        if password != password_confirmation:
+            QMessageBox.warning(self, 'Ошибка', 'Пароли не совпадают')
+            return
+    
+        response = requests.post('http://127.0.0.1:5000/register', json={
+            'username': username,
+            'password': password
+        })
+
+        # Печать содержимого ответа для диагностики
+        print("Server response:", response.text)
+
+        # Обработка ответа от сервера
+        try:
+            response_json = response.json()
+        except requests.exceptions.JSONDecodeError:
+            QMessageBox.warning(self, 'Ошибка', 'Ошибка регистрации: неверный формат ответа от сервера')
+            return
+
+        if response.status_code == 200 or response.status_code == 201: 
+            QMessageBox.information(self, 'Успех', 'Успешная регистрация')
+            self.go_back_to_login()
+        else:
+            QMessageBox.warning(self, 'Ошибка', 'Ошибка регистрации: ' + response_json['error'])
+
+        # Очистка полей ввода
+        self.username_input.clear()
+        self.password_input.clear()
+        self.password_input_confirmation.clear()
 
 
 class LoginPage(QWidget):
@@ -136,6 +190,7 @@ class LoginPage(QWidget):
         self.login_button.setStyleSheet(
             "background-color: #E50914; color: white; font-size: 16px; border: none; border-radius: 5px;"
         )
+        self.login_button.clicked.connect(self.login)
 
         # Чекбокс reCAPTCHA
         self.recaptcha_checkbox = QCheckBox("I'm not a robot", self)
@@ -188,10 +243,34 @@ class LoginPage(QWidget):
         self.registration_page.show()
         self.close()
 
+    def login(self):
+        # Обработка логина
+        username = self.username_input.text()
+        password = self.password_input.text()
+        # Отправка запроса на сервер Flask для логина
+        response = requests.post('http://127.0.0.1:5000/login', json={
+            'username': username,
+            'password': password
+        })
+
+        # Печать содержимого ответа для диагностики
+        print("Server response:", response.text)
+
+        # Обработка ответа от сервера
+        try:
+            response_json = response.json()
+        except requests.exceptions.JSONDecodeError:
+            QMessageBox.warning(self, 'Ошибка', 'Ошибка авторизации: неверный формат ответа от сервера')
+            return
+
+        if response.status_code == 200:
+            QMessageBox.information(self, 'Успех', 'Успешная авторизация')
+        else:
+            QMessageBox.warning(self, 'Ошибка', response_json.get('message', 'Ошибка авторизации'))
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = LoginPage()
     window.show()
     sys.exit(app.exec_())
-
