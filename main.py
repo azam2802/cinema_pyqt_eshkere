@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import (
-    QApplication, QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout, QCheckBox, QSpacerItem, QSizePolicy
+    QApplication, QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout, QSpacerItem, QSizePolicy
 )
 from PyQt5.QtGui import QFont, QPixmap
 from PyQt5.QtCore import Qt
