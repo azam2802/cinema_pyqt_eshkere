@@ -1,10 +1,6 @@
-import sys
-from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QListWidget, QPushButton, QVBoxLayout, 
-    QHBoxLayout, QLabel, QWidget, QTableWidget, QTableWidgetItem
-)
+from PyQt5.QtWidgets import QMainWindow, QListWidget, QPushButton, QVBoxLayout, QHBoxLayout, QLabel, QWidget
 from PyQt5.QtGui import QPalette, QBrush, QLinearGradient, QColor
-
+import requests
 
 class CinemaWindow(QMainWindow):
     def __init__(self):
@@ -55,36 +51,41 @@ class CinemaWindow(QMainWindow):
         self.setCentralWidget(central_widget)
 
         # Add movies to the list
-        self.movie_list.addItems(["Гладиатор 1", "Фильм 2", "Фильм 3"])
+        response = requests.get('http://127.0.0.1:5000/movies/names')
+        if response.status_code == 200 or response.status_code == 201:
+            movie_names = response.json()
+            self.movie_list.addItems(movie_names)
+        else:
+            print("Error fetching movie names:", response.status_code)
 
         # Connect signals
         self.movie_list.itemClicked.connect(self.display_sessions)
         self.info_button.clicked.connect(self.open_movie_info)
 
         # Example data
-        self.movies_data = {
-            "Гладиатор 1": {
-                "sessions": ["12:00", "15:00", "18:00"],
-                "seats": 1250
-            },
-            "Фильм 2": {
-                "sessions": ["14:00", "18:00"],
-                "seats": 800
-            },
-            "Фильм 3": {
-                "sessions": ["16:00", "20:00"],
-                "seats": 600
-            }
-        }
+        self.movies_data = {}
+
+        response = requests.get('http://127.0.0.1:5000/movies/getMovies')
+        if response.status_code == 200:
+            movies_data = response.json()
+            self.movies_data = {movie["title"]: movie for movie in movies_data}
+            print(self.movies_data)
+        else:
+            print("Error fetching movies data:", response.status_code)
+
+        # Apply styles with border and background color
+        self.movie_list.setStyleSheet("border: 1px solid transparent; border-radius: 10px; background-color: rgba(0, 0, 0, 0.5); padding: 5px;")
+        self.session_list.setStyleSheet("border: 1px solid transparent; border-radius: 10px; background-color: rgba(0, 0, 0, 0.5); padding: 5px;")
 
         # Set gradient background
         self.set_gradient_background()
 
     def set_gradient_background(self):
         """Set a diagonal gradient background."""
-        gradient = QLinearGradient(self.width(), self.height(), 0, 0)  # Диагональный градиент
-        gradient.setColorAt(1.0, QColor(136,0,0,35))  # Красный оттенок (нижний правый угол)
-        gradient.setColorAt(0.0, QColor(85,85,85,0.33))  # Серый оттенок (верхний левый угол)
+        gradient = QLinearGradient(self.width(), self.height(), 0, 0)  
+        gradient.setColorAt(1.0, QColor(136,0,0,100))
+        gradient.setColorAt(0.5, QColor(136,0,0,100)) 
+        gradient.setColorAt(0.0, QColor(85,85,85,50)) 
 
 
         palette = QPalette()
@@ -95,11 +96,13 @@ class CinemaWindow(QMainWindow):
         """Display sessions based on the selected movie."""
         self.session_list.clear()
         movie_name = item.text()
-        sessions = self.movies_data.get(movie_name, {}).get("sessions", [])
+        print(self.movies_data)
+        sessions = self.movies_data.get(movie_name, {}).get("showTime", [])
         self.session_list.addItems(sessions)
 
     def open_movie_info(self):
         """Open the movie information window."""
+        from windows.moveInfoWindow import MovieInfoWindow
         selected_movie = self.movie_list.currentItem()
         selected_time = self.session_list.currentItem()
 
@@ -109,48 +112,3 @@ class CinemaWindow(QMainWindow):
             movie_info = self.movies_data.get(movie_name, {})
             self.info_window = MovieInfoWindow(movie_name, time, movie_info)
             self.info_window.show()
-
-
-class MovieInfoWindow(QWidget):
-    def __init__(self, movie_name, time, movie_info):
-        super().__init__()
-        self.setWindowTitle("Информация о фильме")
-        self.resize(500, 300)
-
-        # Movie details
-        name_label = QLabel(f"Название: {movie_name}")
-        session_count_label = QLabel(f"Сеансы: {len(movie_info['sessions'])}")
-        seats_label = QLabel(f"Места: {movie_info['seats']}")
-
-        # Schedule table
-        self.table = QTableWidget()
-        self.table.setRowCount(len(movie_info["sessions"]))
-        self.table.setColumnCount(2)
-        self.table.setHorizontalHeaderLabels(["Название фильма", "Время"])
-
-        # Populate table
-        for i, session_time in enumerate(movie_info["sessions"]):
-            self.table.setItem(i, 0, QTableWidgetItem(movie_name))
-            self.table.setItem(i, 1, QTableWidgetItem(session_time))
-
-        # Back button
-        back_button = QPushButton("Назад")
-        back_button.clicked.connect(self.close)
-
-        # Layout
-        layout = QVBoxLayout()
-        layout.addWidget(name_label)
-        layout.addWidget(session_count_label)
-        layout.addWidget(seats_label)
-        layout.addWidget(self.table)
-        layout.addWidget(back_button)
-
-        self.setLayout(layout)
-        
-
-
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = CinemaWindow()
-    window.show()
-    sys.exit(app.exec_())
