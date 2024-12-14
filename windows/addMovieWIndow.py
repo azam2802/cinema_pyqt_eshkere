@@ -66,8 +66,7 @@ class AddMovieWindow(QDialog):
 
     def add_movie(self):
         title = self.title_input.text()
-        showtime = self.showtime_input.text().split(",")
-        showtime = [str(i).strip() for i in showtime]
+        showtime = [i.strip() for i in self.showtime_input.text().split(",")]
         cost = self.cost_input.text()
         image_path = self.image_label.toolTip()
         print(image_path)
@@ -81,28 +80,24 @@ class AddMovieWindow(QDialog):
         try:
             # Open the image file
             files = {"poster": open(image_path, "rb")}
-            
-            # Prepare data
             data = {
                 'title': title,
-                'showtime': showtime,  # Send showtime as a string
+                'showtime': showtime, 
                 'cost': cost
             }
+            # Prepare data
+            print(showtime)
 
             # Send POST request to add movie
-            response = requests.post('https://tochka2802.pythonanywhere.com/movies/addMovie', data=data, files=files)
+            response = requests.post('https://tochka2802.pythonanywhere.com/movies/addMovie', json=data)
+            print(response.status_code, "status code")
+            response = requests.post('https://tochka2802.pythonanywhere.com/movies/addPoster', data={"title": data.get("title")}, files=files)
             print(response.status_code, "status code")
 
             # Check if the server responded with JSON
-            try:
-                response_data = response.json()
-                if response.status_code == 201:
-                    print("Movie added successfully")
-                    self.accept()  # Close the add movie window after successful add
-                else:
-                    print(f"Error adding movie: {response_data.get('message', 'Unknown error')}")
-           
-            except ValueError:  # Handle case when response is not JSON
-                print(f"Error: {response.status_code}, Response: {response.text}")
+            
+            if response.status_code == 200 or response.status_code == 201:
+                self.accept()  # Close the add movie window after successful add
+    
         except Exception as e:
             print(f"An error occurred: {e}")

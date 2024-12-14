@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QLabel, QTableWidget, QTableWidgetItem,
     QPushButton, QHBoxLayout, QFrame, QGraphicsPixmapItem, QGraphicsScene, QGraphicsView, QButtonGroup
 )
-from PyQt5.QtGui import QColor, QBrush, QPalette, QLinearGradient, QPixmap
+from PyQt5.QtGui import QColor, QBrush, QPalette, QLinearGradient, QPixmap, QPainter
 from PyQt5.QtCore import Qt
 import requests
 
@@ -73,13 +73,10 @@ class MovieInfoWindow(QWidget):
         poster_layout.addWidget(poster_label)
 
         poster_pixmap = QPixmap()
+        print(poster_url)
         if poster_url:
             try:
-                poster_response = requests.get(poster_url)
-                if poster_response.status_code == 200:
-                    poster_pixmap.loadFromData(poster_response.content)
-                else:
-                    poster_pixmap = self.create_placeholder_pixmap()
+                poster_pixmap.loadFromData(requests.get("https://tochka2802.pythonanywhere.com/" + poster_url).content)                
             except Exception:
                 poster_pixmap = self.create_placeholder_pixmap()
         else:
@@ -87,17 +84,21 @@ class MovieInfoWindow(QWidget):
 
         poster_view = QGraphicsView()
         poster_scene = QGraphicsScene()
-        poster_item = QGraphicsPixmapItem(poster_pixmap.scaled(80, 120, Qt.KeepAspectRatio))
+        poster_item = QGraphicsPixmapItem(poster_pixmap.scaled(140, 190, Qt.IgnoreAspectRatio ,Qt.SmoothTransformation))
+        poster_view.setRenderHint(QPainter.Antialiasing)
+        poster_view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        poster_view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         poster_scene.addItem(poster_item)
         poster_view.setScene(poster_scene)
-        poster_view.setFixedSize(90, 130)
+        poster_view.setFixedSize(140, 190)
+
         poster_layout.addWidget(poster_view)
 
         return poster_frame
 
     def create_placeholder_pixmap(self):
         """Create a placeholder pixmap for missing posters."""
-        pixmap = QPixmap(80, 120)
+        pixmap = QPixmap(100, 140)
         pixmap.fill(Qt.gray)
         return pixmap
 

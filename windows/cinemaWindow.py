@@ -151,7 +151,9 @@ class CinemaWindow(QMainWindow):
         """Display sessions for the selected movie."""
         self.session_list.clear()
         movie_name = item.text()
-        sessions = self.movies_data.get(movie_name, {}).get("showTime", [])[0]
+        sessions = self.movies_data.get(movie_name, {}).get("showTime", [])
+        print(sessions)
+
         for session in sessions:
             self.session_list.addItem(session)
 
