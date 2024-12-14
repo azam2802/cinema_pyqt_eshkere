@@ -13,8 +13,8 @@ class HistoryWindow(QMainWindow):
 
         # Set up the table widget
         self.table = QTableWidget(self)
-        self.table.setColumnCount(5)  # Movie, Showtime, Price, Count, Status
-        self.table.setHorizontalHeaderLabels(["Movie", "Showtime", "Price", "Count", "Status"])
+        self.table.setColumnCount(4)  # Movie, Showtime, Price, Count, Status
+        self.table.setHorizontalHeaderLabels(["Movie", "Showtime", "Seat", "Status"])
         self.table.horizontalHeader().setStretchLastSection(True)
         self.table.setEditTriggers(QTableWidget.NoEditTriggers)  # Disable editing
 
@@ -39,6 +39,7 @@ class HistoryWindow(QMainWindow):
 
             if response.status_code == 200:
                 history = response.json().get("history", {})
+                print("history\n", history)
                 if history:
                     self.populate_table(history)
                 else:
@@ -58,13 +59,9 @@ class HistoryWindow(QMainWindow):
         for movie, movie_history in history.items():
             for action, details in movie_history.items():
                 for showtime, seats_data in details.items():
-                    cost = details.get("price", 0)  # Fetch the price for the movie/showtime
-                    count = len(seats_data)  # Count the number of booked/bought seats
-                    for seat in seats_data:
                         self.table.insertRow(row)
                         self.table.setItem(row, 0, QTableWidgetItem(movie))
                         self.table.setItem(row, 1, QTableWidgetItem(showtime))
-                        self.table.setItem(row, 2, QTableWidgetItem(str(cost)))  # Display the price
-                        self.table.setItem(row, 3, QTableWidgetItem(str(count)))  # Show the seat count
-                        self.table.setItem(row, 4, QTableWidgetItem(action.capitalize()))  # Display "Booked" or "Bought"
+                        self.table.setItem(row, 2, QTableWidgetItem(', '.join(seats_data)))  # Show the seat count
+                        self.table.setItem(row, 3, QTableWidgetItem(action.capitalize()))  # Display "Booked" or "Bought"
                         row += 1

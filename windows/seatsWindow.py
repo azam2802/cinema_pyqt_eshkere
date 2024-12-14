@@ -15,7 +15,6 @@ class SeatsWindow(QMainWindow):
         self.session_time = session_time
         self.username = username
         self.selected_seat = None                                                                                                        
-        requests.post("https://tochka2802.pythonanywhere.com/users/addHistory", json={"username": self.username, "movie": self.movie_name, "showtime": self.session_time, "seat": "23", "type": "booked"})
 
         main_layout = QVBoxLayout()
   
