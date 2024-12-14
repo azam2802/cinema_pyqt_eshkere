@@ -73,22 +73,36 @@ class AddMovieWindow(QDialog):
         print(image_path)
         files = {"poster": open(image_path, "rb")}
 
-
+        # Ensure the file path is valid before trying to open the file
         if not title or not showtime or not cost or not image_path:
             print("All fields are required")
             return
 
-        data = {
-            'title': title,
-            'showtime': [showtime],
-            'cost': cost
-        }
+        try:
+            # Open the image file
+            files = {"poster": open(image_path, "rb")}
+            
+            # Prepare data
+            data = {
+                'title': title,
+                'showtime': showtime,  # Send showtime as a string
+                'cost': cost
+            }
 
-        # Send POST request to add movie
-        response = requests.post('https://tochka2802.pythonanywhere.com/movies/addMovie', data=data, files=files)
-        print(response.status_code, "status code")
-        if response.status_code == 201:
-            print("Movie added successfully")
-            self.accept()  # Close the add movie window after successful add
-        else:
-            print(f"Error adding movie: {response.json().get('message')}")
+            # Send POST request to add movie
+            response = requests.post('https://tochka2802.pythonanywhere.com/movies/addMovie', data=data, files=files)
+            print(response.status_code, "status code")
+
+            # Check if the server responded with JSON
+            try:
+                response_data = response.json()
+                if response.status_code == 201:
+                    print("Movie added successfully")
+                    self.accept()  # Close the add movie window after successful add
+                else:
+                    print(f"Error adding movie: {response_data.get('message', 'Unknown error')}")
+           
+            except ValueError:  # Handle case when response is not JSON
+                print(f"Error: {response.status_code}, Response: {response.text}")
+        except Exception as e:
+            print(f"An error occurred: {e}")
