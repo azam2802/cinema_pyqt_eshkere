@@ -114,7 +114,7 @@ class RegistrationPage(QWidget):
             QMessageBox.warning(self, 'Ошибка', 'Пароли не совпадают')
             return
     
-        response = requests.post('http://127.0.0.1:5000/register', json={
+        response = requests.post('https://tochka2802.pythonanywhere.com/register', json={
             'username': username,
             'password': password
         })

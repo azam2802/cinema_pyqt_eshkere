@@ -111,7 +111,7 @@ class LoginPage(QWidget):
         username = self.username_input.text()
         password = self.password_input.text()
         # Отправка запроса на сервер Flask для логина
-        response = requests.post('http://127.0.0.1:5000/login', json={
+        response = requests.post('https://tochka2802.pythonanywhere.com/login', json={
             'username': username,
             'password': password
         })
@@ -129,7 +129,7 @@ class LoginPage(QWidget):
         if response.status_code == 200:
             self.close()
             from windows.cinemaWindow import CinemaWindow
-            self.cinema_window = CinemaWindow()
+            self.cinema_window = CinemaWindow(self.username_input.text())
             self.cinema_window.show()
             QMessageBox.information(self, 'Успех', 'Успешная авторизация')
         else:

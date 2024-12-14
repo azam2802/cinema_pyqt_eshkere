@@ -20,7 +20,8 @@ class Movie:
         self.seats = len(self.showTime) * 48
 
     def addShowTime(self, showTime):
-        self.showTime.append(showTime)
+        if showTime not in self.showTime:
+            self.showTime.append(showTime)
 
 admin = User("admin", "admin")
 user1 = User("user1", "user1")
@@ -36,8 +37,6 @@ user1.addHistory("Movie 1", "12:00")
 user2.addHistory("Movie 1", "14:00")
 user2.addHistory("Movie 1", "15:00")
 user2.addHistory("Movie 2", "17:00")
-
-
 
 @app.route('/register', methods=['POST'])
 def register():
@@ -77,9 +76,16 @@ def add_movie():
     title = data['title']
     showTime = data['showTime']
     cost = data['cost']
-    movie = Movie(title, showTime, cost)
+    
+    # Создаем фильм без стандартных сеансов
+    movie = Movie(title, cost)
+    movie.showTime = []  # Удаляем стандартные времена
+    for time in showTime:
+        movie.addShowTime(time)  # Добавляем только переданные сеансы
+    
     movies.append(movie)
     return jsonify({"message": "Фильм добавлен"}), 201
+
 
 @app.route('/movies/getMovies', methods=['GET'])
 def get_movies():
@@ -98,7 +104,7 @@ def add_show_time():
         movie.addShowTime(showTime)
         return jsonify({"message": "Сеанс добавлен"}), 201
     else:
-        return jsonify({"message": "Фильм не найден"}), 404
+        return jsonify({"message": "Фильм не найден"}), 404
 
 @app.route('/movies/names', methods=['GET'])
 def get_movie_names():
@@ -114,6 +120,17 @@ def get_movie_info():
         if user.history.get(data['title'], None):
             info[user.username] = user.history[data['title']]
     return jsonify(info), 200
+
+@app.route('/movies/delete/<string:title>', methods=['DELETE'])
+def delete_movie(title):
+    global movies
+    movie_to_delete = next((m for m in movies if m.title == title), None)
+    if movie_to_delete:
+        movies.remove(movie_to_delete)
+        return jsonify({"message": "Фильм удален"}), 200
+    else:
+        return jsonify({"message": "Фильм не найден"}), 404
+
 
 if __name__ == '__main__':
     app.run(debug=True)
