@@ -1,10 +1,13 @@
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLineEdit, QPushButton, QSizePolicy, QLabel, QFileDialog
 from PyQt5.QtGui import QLinearGradient, QPalette, QBrush, QColor, QPixmap
 import requests
+from windows.snowflakes import SnowfallBackground
 
 class AddMovieWindow(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.snowfall_background = SnowfallBackground(self)
+
         self.setWindowTitle("Добавить фильм")
         self.setFixedSize(300, 500)
 
@@ -35,7 +38,7 @@ class AddMovieWindow(QDialog):
 
         self.add_button = QPushButton("Добавить фильм")
         layout.addWidget(self.add_button)
-
+        self.snowfall_background.create_snowflakes()
         self.setLayout(layout)
 
         # Connect signals

@@ -4,10 +4,11 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtGui import QFont, QPixmap
 from PyQt5.QtCore import Qt
-import requests
 import random
 import string
+import requests
 from captcha.image import ImageCaptcha
+from windows.snowflakes import SnowfallBackground
 
 class LoginPage(QWidget):
     def __init__(self):
@@ -17,6 +18,9 @@ class LoginPage(QWidget):
         self.setWindowTitle("Авторизация")
         self.setFixedSize(800, 600)
 
+        # Snowfall background
+        self.snowfall_background = SnowfallBackground(self)
+        
         # Фоновое изображение
         self.background_label = QLabel(self)
         self.background_label.setPixmap(QPixmap("./img/back.jpg").scaled(
@@ -100,6 +104,7 @@ class LoginPage(QWidget):
         main_layout.addWidget(self.welcome_label)
 
         # Перемещение виджетов на передний план
+        self.snowfall_background.raise_()
         self.title_label.raise_()
         self.username_input.raise_()
         self.password_input.raise_()
@@ -114,6 +119,9 @@ class LoginPage(QWidget):
 
         # Generate and display captcha
         self.generate_captcha()
+
+        # Создаем snowfall после всех других элементов
+        self.snowfall_background.create_snowflakes()
 
     def open_registration_page(self):
         # Создаем и показываем окно регистрации

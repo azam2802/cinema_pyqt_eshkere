@@ -1,11 +1,14 @@
 from PyQt5.QtWidgets import QDialog, QMessageBox, QVBoxLayout, QLineEdit, QPushButton, QLabel, QSizePolicy
 from PyQt5.QtGui import QLinearGradient, QPalette, QBrush, QColor
 import requests
+from windows.snowflakes import SnowfallBackground
 
 class AddSeansWindow(QDialog):
     def __init__(self, movie, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Добавить сеанс")
+        self.snowfall_background = SnowfallBackground(self)
+        self.snowfall_background.create_snowflakes()
         self.setFixedSize(300, 300)
         self.movie = movie
         self.text = movie.text()

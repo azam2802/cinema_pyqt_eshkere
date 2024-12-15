@@ -1,8 +1,10 @@
 from PyQt5.QtWidgets import (
-    QMainWindow, QPushButton, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget, QMessageBox, 
+    QMainWindow, QPushButton, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget, QMessageBox
+
 )
 from PyQt5.QtGui import QLinearGradient, QColor, QPalette, QBrush
 import requests
+from windows.snowflakes import SnowfallBackground
 
 class HistoryWindow(QMainWindow):
     def __init__(self, username):
@@ -10,7 +12,9 @@ class HistoryWindow(QMainWindow):
         self.username = username
         self.setWindowTitle("User Booking History")
         self.setGeometry(200, 200, 600, 400)
-
+        self.snowfall_background = SnowfallBackground(self)
+        self.snowfall_background.create_snowflakes()
+        self.raise_()
         # Set up the table widget
         self.table = QTableWidget(self)
         self.table.setColumnCount(4)  # Movie, Showtime, Price, Count, Status

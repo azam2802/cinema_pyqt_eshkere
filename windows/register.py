@@ -4,10 +4,11 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtGui import QFont, QPixmap
 from PyQt5.QtCore import Qt
-import requests
 import random
 import string
+import requests
 from captcha.image import ImageCaptcha
+from windows.snowflakes import SnowfallBackground
 
 class RegistrationPage(QWidget):
     def __init__(self):
@@ -17,6 +18,8 @@ class RegistrationPage(QWidget):
         self.setWindowTitle("Регистрация")
         self.setFixedSize(800, 600)
 
+        self.snowfall_background = SnowfallBackground(self)
+        
         # Фоновое изображение
         self.background_label = QLabel(self)
         self.background_label.setPixmap(QPixmap("./img/back.jpg").scaled(
@@ -103,6 +106,10 @@ class RegistrationPage(QWidget):
 
         # Generate and display captcha
         self.generate_captcha()
+
+        # Создаем snowfall после всех других элементов
+        self.snowfall_background.create_snowflakes()
+
 
     def generate_captcha(self):
         """Generate a random captcha."""

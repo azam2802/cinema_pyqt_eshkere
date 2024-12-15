@@ -5,12 +5,15 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont, QLinearGradient, QColor, QPalette, QBrush
 import requests
+from windows.snowflakes import SnowfallBackground
 
 class SeatsWindow(QMainWindow):
     def __init__(self, movie_name, session_time, username):
         super().__init__()
         self.setWindowTitle("Выбор мест")
         self.resize(800, 600)
+        self.snowfall_background = SnowfallBackground(self)
+        self.snowfall_background.create_snowflakes()
         self.movie_name = movie_name
         self.session_time = session_time
         self.username = username

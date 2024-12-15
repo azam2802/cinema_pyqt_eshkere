@@ -11,7 +11,7 @@ from windows.moveInfoWindow import MovieInfoWindow
 from windows.addMovieWIndow import AddMovieWindow
 from windows.profileWindow import UserProfile
 from windows.historyWIndow import HistoryWindow
-
+from windows.snowflakes import SnowfallBackground
 
 class CinemaWindow(QMainWindow):
     def __init__(self, username):
@@ -23,6 +23,8 @@ class CinemaWindow(QMainWindow):
         # Create widgets
         self.movie_list = QListWidget()
         self.session_list = QListWidget()
+
+        self.snowfall_background = SnowfallBackground(self) 
 
         movies_label = QLabel("Фильмы")
         sessions_label = QLabel("Сеансы")
@@ -112,8 +114,9 @@ class CinemaWindow(QMainWindow):
         self.session_list.setStyleSheet(
             "border: 1px solid transparent; border-radius: 10px; background-color: rgba(0, 0, 0, 0.5); padding: 5px;"
         )
+        self.snowfall_background.create_snowflakes() 
 
- 
+        self.raise_()
 
     def onRowSelection(self, item):
         self.display_sessions(item)

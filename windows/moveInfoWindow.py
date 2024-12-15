@@ -5,12 +5,14 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QColor, QBrush, QPalette, QLinearGradient, QPixmap, QPainter, QFont
 from PyQt5.QtCore import Qt
 import requests
-
 from windows.rateWindow import RateMovie
+from windows.snowflakes import SnowfallBackground
 
 class MovieInfoWindow(QWidget):
     def __init__(self, movie_name, movie_info, username):
         super().__init__()
+        self.snowfall_background = SnowfallBackground(self)
+        self.snowfall_background.create_snowflakes()
         self.setWindowTitle("Информация о фильме")
         self.resize(800, 800)
         self.movie_name = movie_name
@@ -135,13 +137,13 @@ class MovieInfoWindow(QWidget):
 
         poster_view = QGraphicsView()
         poster_scene = QGraphicsScene()
-        poster_item = QGraphicsPixmapItem(poster_pixmap.scaled(230, 300, Qt.IgnoreAspectRatio ,Qt.SmoothTransformation))
+        poster_item = QGraphicsPixmapItem(poster_pixmap.scaled(210, 300, Qt.IgnoreAspectRatio ,Qt.SmoothTransformation))
         poster_view.setRenderHint(QPainter.Antialiasing)
         poster_view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         poster_view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         poster_scene.addItem(poster_item)
         poster_view.setScene(poster_scene)
-        poster_view.setFixedSize(230, 300)
+        poster_view.setFixedSize(210, 300)
 
         poster_layout.addWidget(poster_view)
 

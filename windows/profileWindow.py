@@ -5,12 +5,13 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QPixmap, QLinearGradient, QBrush, QColor, QPainter, QPalette, QFont, QPen, QRegion
 from PyQt5.QtCore import Qt, QRect
 import requests 
-
+from windows.snowflakes import SnowfallBackground
 
 class UserProfile(QDialog):
     def __init__(self, username, avatar_pixmap=None, parent=None):
         super().__init__(parent)
-
+        self.snowfall_background = SnowfallBackground(self)
+        self.snowfall_background.create_snowflakes()
         # Set the initial theme to light
         self.theme = "light"
         self.avatar_pixmap = avatar_pixmap
