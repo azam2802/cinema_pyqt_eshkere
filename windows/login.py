@@ -5,6 +5,9 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QFont, QPixmap
 from PyQt5.QtCore import Qt
 import requests
+import random
+import string
+from captcha.image import ImageCaptcha
 
 class LoginPage(QWidget):
     def __init__(self):
@@ -46,6 +49,17 @@ class LoginPage(QWidget):
         self.password_input.setAlignment(Qt.AlignCenter)
         self.password_input.setStyleSheet("border-radius: 5px;")
 
+        # Captcha
+        self.captcha_label = QLabel(self)
+        self.captcha_label.setFixedSize(295, 100)
+        self.captcha_label.setAlignment(Qt.AlignCenter)
+
+        self.captcha_input = QLineEdit(self)
+        self.captcha_input.setPlaceholderText("Введите код с картинки")
+        self.captcha_input.setFixedSize(295, 40)
+        self.captcha_input.setAlignment(Qt.AlignCenter)
+        self.captcha_input.setStyleSheet("border-radius: 5px;")
+
         # Кнопка входа
         self.login_button = QPushButton("Войти", self)
         self.login_button.setFixedSize(295, 40)
@@ -54,9 +68,6 @@ class LoginPage(QWidget):
         )
         self.login_button.clicked.connect(self.login)
 
-        # Чекбокс reCAPTCHA
-        self.recaptcha_checkbox = QCheckBox("I'm not a robot", self)
-        self.recaptcha_checkbox.setStyleSheet("color: white;")
 
         # Ссылка регистрации
         self.register_link = QLabel('<a href="#">Регистрация</a>', self)
@@ -76,14 +87,15 @@ class LoginPage(QWidget):
         form_layout.addSpacing(20)
         form_layout.addWidget(self.username_input)
         form_layout.addWidget(self.password_input)
+        form_layout.addWidget(self.captcha_label)
+        form_layout.addWidget(self.captcha_input)
         form_layout.addWidget(self.login_button)
-        form_layout.addWidget(self.recaptcha_checkbox, alignment=Qt.AlignCenter)
         form_layout.addWidget(self.register_link)
 
         # Основной компоновщик для центрирования
         main_layout = QVBoxLayout(self)
         main_layout.addSpacerItem(QSpacerItem(0, 0, QSizePolicy.Minimum, QSizePolicy.Expanding))  # Верхний отступ
-        main_layout.addLayout(form_layout)  # Центрируемая форма
+        main_layout.addLayout(form_layout)
         main_layout.addSpacerItem(QSpacerItem(0, 0, QSizePolicy.Minimum, QSizePolicy.Expanding))  # Нижний отступ
         main_layout.addWidget(self.welcome_label)
 
@@ -91,13 +103,17 @@ class LoginPage(QWidget):
         self.title_label.raise_()
         self.username_input.raise_()
         self.password_input.raise_()
+        self.captcha_label.raise_()
+        self.captcha_input.raise_()
         self.login_button.raise_()
-        self.recaptcha_checkbox.raise_()
         self.register_link.raise_()
         self.welcome_label.raise_()
 
         # Сигнал для открытия окна регистрации
         self.register_link.linkActivated.connect(self.open_registration_page)
+
+        # Generate and display captcha
+        self.generate_captcha()
 
     def open_registration_page(self):
         # Создаем и показываем окно регистрации
@@ -106,11 +122,30 @@ class LoginPage(QWidget):
         self.registration_page.show()
         self.close()
 
+    def generate_captcha(self):
+        self.captcha_text = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+        
+        # Create captcha image
+        image = ImageCaptcha(width=295, height=60)
+        data = image.generate(self.captcha_text)
+        
+        # Convert to QPixmap
+        pixmap = QPixmap()
+        pixmap.loadFromData(data.getvalue())
+        
+        # Set captcha image
+        self.captcha_label.setPixmap(pixmap)
+
     def login(self):
+        # Validate captcha first
+        if self.captcha_input.text().upper() != self.captcha_text:
+            QMessageBox.warning(self, 'Ошибка', 'Неверный код captcha')
+            self.generate_captcha() 
+            return
+
         # Обработка логина
         username = self.username_input.text()
         password = self.password_input.text()
-        # Отправка запроса на сервер Flask для логина
         response = requests.post('https://tochka2802.pythonanywhere.com/login', json={
             'username': username,
             'password': password
@@ -119,7 +154,6 @@ class LoginPage(QWidget):
         # Печать содержимого ответа для диагностики
         print("Server response:", response.text)
 
-        # Обработка ответа от сервера
         try:
             response.json()
         except requests.exceptions.JSONDecodeError:
@@ -129,7 +163,7 @@ class LoginPage(QWidget):
         if response.status_code == 200:
             self.close()
             from windows.cinemaWindow import CinemaWindow
-            self.cinema_window = CinemaWindow(self.username_input.text())
+            self.cinema_window = CinemaWindow(username)
             self.cinema_window.show()
             QMessageBox.information(self, 'Успех', 'Успешная авторизация')
         else:

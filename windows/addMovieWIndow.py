@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLineEdit, QPushButton, QLabel, QFileDialog
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLineEdit, QPushButton, QSizePolicy, QLabel, QFileDialog
 from PyQt5.QtGui import QLinearGradient, QPalette, QBrush, QColor, QPixmap
 import requests
 
@@ -6,7 +6,7 @@ class AddMovieWindow(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Добавить фильм")
-        self.setFixedSize(300, 400)
+        self.setFixedSize(300, 500)
 
         # Create layout and widgets
         layout = QVBoxLayout()
@@ -24,8 +24,9 @@ class AddMovieWindow(QDialog):
         layout.addWidget(self.cost_input)
 
         self.image_label = QLabel("Выберите изображение")
-        self.image_label.setFixedSize(200, 200)
-        self.image_label.setStyleSheet("border: 1px solid gray; background-color: #f0f0f0;")
+        self.image_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.image_label.setMinimumHeight(300)
+        self.image_label.setStyleSheet("border: 1px solid gray; background-color: #f0f0f0; text-align: center; color: black")
         layout.addWidget(self.image_label)
 
         self.image_button = QPushButton("Загрузить изображение")

@@ -12,7 +12,7 @@ class MovieInfoWindow(QWidget):
     def __init__(self, movie_name, movie_info, username):
         super().__init__()
         self.setWindowTitle("Информация о фильме")
-        self.resize(800, 600)
+        self.resize(800, 800)
         self.movie_name = movie_name
         self.username = username
         clients_info = self.fetch_movie_info(movie_name)
@@ -135,13 +135,13 @@ class MovieInfoWindow(QWidget):
 
         poster_view = QGraphicsView()
         poster_scene = QGraphicsScene()
-        poster_item = QGraphicsPixmapItem(poster_pixmap.scaled(170, 220, Qt.IgnoreAspectRatio ,Qt.SmoothTransformation))
+        poster_item = QGraphicsPixmapItem(poster_pixmap.scaled(230, 300, Qt.IgnoreAspectRatio ,Qt.SmoothTransformation))
         poster_view.setRenderHint(QPainter.Antialiasing)
         poster_view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         poster_view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         poster_scene.addItem(poster_item)
         poster_view.setScene(poster_scene)
-        poster_view.setFixedSize(170, 220)
+        poster_view.setFixedSize(230, 300)
 
         poster_layout.addWidget(poster_view)
 
@@ -181,11 +181,21 @@ class MovieInfoWindow(QWidget):
 
         for i, (name, data) in enumerate(clients_info.items()):
             print(i, name, data)
-            bookedSeats = [num for nums in data['booked'].values() for num in nums]
-            boughtSeats = [num for nums in data['bought'].values() for num in nums]
+            try:
+                bookedSeats = [num for nums in data['booked'].values() for num in nums]
+            except: 
+                bookedSeats = []
+            try:
+                boughtSeats = [num for nums in data['bought'].values() for num in nums]
+            except: 
+                boughtSeats = []
+
             time = []
-            for outer_dict in data.values():
-                time.extend(outer_dict.keys())
+            try:
+                for outer_dict in data.values():
+                    time.extend(outer_dict.keys())
+            except:
+                pass
 
             time = list(set(time))
 

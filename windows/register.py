@@ -1,10 +1,13 @@
 from PyQt5.QtWidgets import (
-    QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout, QCheckBox, QSpacerItem, QSizePolicy,
+    QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout, QSpacerItem, QSizePolicy,
     QMessageBox
 )
 from PyQt5.QtGui import QFont, QPixmap
 from PyQt5.QtCore import Qt
 import requests
+import random
+import string
+from captcha.image import ImageCaptcha
 
 class RegistrationPage(QWidget):
     def __init__(self):
@@ -39,13 +42,6 @@ class RegistrationPage(QWidget):
         self.username_input.setAlignment(Qt.AlignCenter)
         self.username_input.setStyleSheet("border-radius: 5px;")
 
-        self.password_input_confirmation = QLineEdit(self)
-        self.password_input_confirmation.setPlaceholderText("Подтвердить пароль")
-        self.password_input_confirmation.setEchoMode(QLineEdit.Password)
-        self.password_input_confirmation.setFixedSize(295, 40)
-        self.password_input_confirmation.setAlignment(Qt.AlignCenter)
-        self.password_input_confirmation.setStyleSheet("border-radius: 5px;")
-
         self.password_input = QLineEdit(self)
         self.password_input.setPlaceholderText("Пароль")
         self.password_input.setEchoMode(QLineEdit.Password)
@@ -53,20 +49,32 @@ class RegistrationPage(QWidget):
         self.password_input.setAlignment(Qt.AlignCenter)
         self.password_input.setStyleSheet("border-radius: 5px;")
 
+        self.password_input_confirmation = QLineEdit(self)
+        self.password_input_confirmation.setPlaceholderText("Подтвердить пароль")
+        self.password_input_confirmation.setEchoMode(QLineEdit.Password)
+        self.password_input_confirmation.setFixedSize(295, 40)
+        self.password_input_confirmation.setAlignment(Qt.AlignCenter)
+        self.password_input_confirmation.setStyleSheet("border-radius: 5px;")
+
+        # Captcha
+        self.captcha_label = QLabel(self)
+        self.captcha_label.setFixedSize(295, 100)
+        self.captcha_label.setAlignment(Qt.AlignCenter)
+
+        self.captcha_input = QLineEdit(self)
+        self.captcha_input.setPlaceholderText("Введите код с картинки")
+        self.captcha_input.setFixedSize(295, 40)
+        self.captcha_input.setAlignment(Qt.AlignCenter)
+        self.captcha_input.setStyleSheet("border-radius: 5px;")
+
         # Кнопка регистрации
         self.register_button = QPushButton("Зарегистрироваться", self)
         self.register_button.setFixedSize(295, 40)
         self.register_button.setStyleSheet(
             "background-color: #E50914; color: white; font-size: 16px; border: none; border-radius: 5px;"
         )
-    
-        # Капча (ссылка на реCAPTCHA, заменить на реальную капчу)
-        self.recaptcha_checkbox = QCheckBox("I'm not a robot", self)
-        self.recaptcha_checkbox.setStyleSheet("color: white;")
-
-        # Обработчик нажатия кнопки регистрации
         self.register_button.clicked.connect(self.register)
-        
+
         # Кнопка назад
         self.login_link = QLabel('<a href="#">Войти</a>', self)
         self.login_link.setStyleSheet("color: lightblue;")
@@ -80,8 +88,9 @@ class RegistrationPage(QWidget):
         form_layout.addWidget(self.username_input)
         form_layout.addWidget(self.password_input)
         form_layout.addWidget(self.password_input_confirmation)
+        form_layout.addWidget(self.captcha_label)
+        form_layout.addWidget(self.captcha_input)
         form_layout.addWidget(self.register_button)
-        form_layout.addWidget(self.recaptcha_checkbox)
         form_layout.addWidget(self.login_link)
 
         # Основной компоновщик для центрирования
@@ -92,16 +101,30 @@ class RegistrationPage(QWidget):
 
         self.login_link.linkActivated.connect(self.go_back_to_login)
 
-    def go_back_to_login(self):
-        # Создаем и показываем окно авторизации
-        from windows.login import LoginPage
-        self.login_page = LoginPage()
-        self.login_page.show()
-        self.close()
+        # Generate and display captcha
+        self.generate_captcha()
+
+    def generate_captcha(self):
+        """Generate a random captcha."""
+        # Generate a random 6-character string
+        self.captcha_text = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+        
+        # Create captcha image
+        image = ImageCaptcha(width=295, height=100)
+        data = image.generate(self.captcha_text)
+        
+        # Convert to QPixmap
+        pixmap = QPixmap()
+        pixmap.loadFromData(data.getvalue())
+        
+        # Set captcha image
+        self.captcha_label.setPixmap(pixmap)
 
     def register(self):
-        if not self.recaptcha_checkbox.isChecked():
-            QMessageBox.warning(self, 'Ошибка', 'Подтвердите, что вы не робот')
+        # Validate captcha first
+        if self.captcha_input.text().upper() != self.captcha_text:
+            QMessageBox.warning(self, 'Ошибка', 'Неверный код captcha')
+            self.generate_captcha()  # Regenerate captcha
             return
 
         # Обработка регистрации
@@ -139,3 +162,10 @@ class RegistrationPage(QWidget):
         self.username_input.clear()
         self.password_input.clear()
         self.password_input_confirmation.clear()
+
+    def go_back_to_login(self):
+        # Создаем и показываем окно авторизации
+        from windows.login import LoginPage
+        self.login_page = LoginPage()
+        self.login_page.show()
+        self.close()

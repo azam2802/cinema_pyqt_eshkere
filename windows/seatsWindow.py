@@ -59,7 +59,6 @@ class SeatsWindow(QMainWindow):
 
         # Buttons for booking and purchasing (arranged vertically and centered)
         button_layout = QVBoxLayout()
-        button_layout.setAlignment(Qt.AlignCenter)
         self.reserve_button = QPushButton("Забронировать")
         self.buy_button = QPushButton("Купить")
         self.back_button = QPushButton("Назад")
@@ -67,6 +66,26 @@ class SeatsWindow(QMainWindow):
         button_layout.addWidget(self.buy_button)
         button_layout.addWidget(self.back_button)
         main_layout.addLayout(button_layout)
+    
+
+        for i in [self.reserve_button, self.buy_button, self.back_button]:
+            i.setStyleSheet(
+                  """
+            QPushButton {
+                background-color: rgba(0, 0, 0, 75);
+                color: white;
+                border: none;
+                border-radius: 10px;
+                padding: 10px;
+            }
+            QPushButton:hover {
+                background-color: rgba(0, 0, 0, 100);
+            }
+            QPushButton:pressed {
+                background-color: rgba(0, 0, 0, 100);
+            }
+            """
+            )
 
         # Set central widget
         central_widget = QWidget()

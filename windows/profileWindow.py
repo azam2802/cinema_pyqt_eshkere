@@ -1,18 +1,20 @@
 from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QLabel, QVBoxLayout, QLineEdit, QFileDialog,
-    QDialog, QDialogButtonBox, QWidget, QPushButton
+    QApplication, QLabel, QVBoxLayout, QFileDialog,
+    QDialog, QWidget, QPushButton
 )
-from PyQt5.QtGui import QPixmap, QLinearGradient, QBrush, QColor, QPainter, QPalette, QFont
+from PyQt5.QtGui import QPixmap, QLinearGradient, QBrush, QColor, QPainter, QPalette, QFont, QPen, QRegion
 from PyQt5.QtCore import Qt, QRect
+import requests 
 
 
-class UserProfile(QMainWindow):
-    def __init__(self):
-        super().__init__()
+class UserProfile(QDialog):
+    def __init__(self, username, avatar_pixmap=None, parent=None):
+        super().__init__(parent)
 
         # Set the initial theme to light
         self.theme = "light"
-
+        self.avatar_pixmap = avatar_pixmap
+        self.username = username
         # Set the font globally for the application
         font = QFont("Montserrat")
         QApplication.setFont(font)
@@ -22,39 +24,18 @@ class UserProfile(QMainWindow):
         self.setGeometry(100, 100, 800, 600)
         self.setFixedSize(800, 600)
         self.initUI()
-        self.apply_theme()
 
-    def apply_theme(self):
-        """Apply the current theme to the application."""
-        palette = self.palette()
+    def set_gradient_background(self):
+        """Set a diagonal gradient background."""
+        gradient = QLinearGradient(self.width(), self.height(), 0, 0)
+        gradient.setColorAt(1.0, QColor(136, 0, 0, 100))
+        gradient.setColorAt(0.5, QColor(136, 0, 0, 100))
+        gradient.setColorAt(0.0, QColor(85, 85, 85, 50))
 
-        gradient = QLinearGradient(0, 0, self.width(), self.height())
-        if self.theme == "light":
-            # Light theme gradient
-            gradient.setColorAt(1.0, QColor(136, 0, 0, 35))  # Красный оттенок
-            gradient.setColorAt(0.0, QColor(85, 85, 85, 85))  # Серый оттенок
-            text_color = "white"
-        else:
-            # Dark theme gradient
-            gradient.setColorAt(1.0, QColor(50, 50, 50, 180))  # Dark gray
-            gradient.setColorAt(0.0, QColor(70, 130, 180, 150))  # Steel blue
-            text_color = "white"
-
+        palette = QPalette()
         palette.setBrush(QPalette.Window, QBrush(gradient))
         self.setPalette(palette)
 
-        # Update styles for the username label
-        self.name_label.setStyleSheet(f"""
-            font-size: 24px;
-            font-weight: bold;
-            font-family: 'Montserrat', sans-serif;
-            color: {text_color};
-        """)
-
-    def toggle_theme(self):
-        """Toggle between light and dark themes."""
-        self.theme = "dark" if self.theme == "light" else "light"
-        self.apply_theme()
 
     def create_styled_button(self, text):
         """Helper method to create styled buttons."""
@@ -81,36 +62,86 @@ class UserProfile(QMainWindow):
     def initUI(self):
         # Central widget and layout
         central_widget = QWidget(self)
-        self.setCentralWidget(central_widget)
         layout = QVBoxLayout(central_widget)
-
-        # Theme toggle button
-        self.theme_toggle_button = self.create_styled_button("Тема")
-        self.theme_toggle_button.setFixedSize(50, 30)
-        self.theme_toggle_button.clicked.connect(self.toggle_theme)
-        layout.addWidget(self.theme_toggle_button, alignment=Qt.AlignRight)
-
+        self.setLayout(layout)
+        self.set_gradient_background()
         # User avatar
         self.avatar_label = QLabel(self)
         self.avatar_label.setFixedSize(200, 200)
-        self.avatar_label.setStyleSheet("border: 2px solid gray; border-radius: 100px; background-color: lightgray;")
+        self.avatar_label.setStyleSheet("""
+            QLabel {
+                border: 2px solid gray;
+                border-radius: 100px;
+                background-color: transparent;
+            }
+        """)
         self.avatar_label.setAlignment(Qt.AlignCenter)
-        self.avatar_label.setPixmap(QPixmap("default_avatar.png").scaled(200, 200, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        
+        if self.avatar_pixmap:
+            # Create circular avatar at full size
+            size = 200
+            mask = QPixmap(size, size)
+            mask.fill(Qt.transparent)
+            
+            painter = QPainter(mask)
+            painter.setRenderHint(QPainter.Antialiasing, True)
+            painter.setRenderHint(QPainter.SmoothPixmapTransform, True)
+            painter.setRenderHint(QPainter.HighQualityAntialiasing, True)
+            
+            # Draw circular mask
+            painter.setCompositionMode(QPainter.CompositionMode_Source)
+            painter.setBrush(Qt.black)
+            painter.setPen(QPen(Qt.black, 1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+            painter.drawEllipse(0, 0, size, size)
+            painter.end()
+            
+            # Scale avatar
+            scaled_avatar = self.avatar_pixmap.scaled(
+                size, size,
+                Qt.KeepAspectRatioByExpanding,
+                Qt.SmoothTransformation
+            )
+            
+            # Create result pixmap
+            result = QPixmap(size, size)
+            result.fill(Qt.transparent)
+            
+            # Apply mask
+            painter = QPainter(result)
+            painter.setRenderHint(QPainter.Antialiasing, True)
+            painter.setRenderHint(QPainter.SmoothPixmapTransform, True)
+            painter.setRenderHint(QPainter.HighQualityAntialiasing, True)
+            painter.setCompositionMode(QPainter.CompositionMode_Source)
+            
+            # Draw using mask
+            painter.setClipRegion(QRegion(mask.mask()))
+            painter.drawPixmap(0, 0, scaled_avatar)
+            painter.end()
+            
+            self.avatar_label.setPixmap(result)
+        else:
+            default_pixmap = QPixmap("default_avatar.png")
+            if not default_pixmap.isNull():
+                scaled_default = default_pixmap.scaled(
+                    220,220,
+                    Qt.KeepAspectRatio,
+                    Qt.SmoothTransformation
+                )
+                self.avatar_label.setPixmap(scaled_default)
+            else:
+                self.avatar_label.setText("No Avatar")
+        
         layout.addWidget(self.avatar_label, alignment=Qt.AlignCenter)
 
         # Username label
-        self.name_label = QLabel("Имя Пользователя", self)
+
+        self.name_label = QLabel(self.username, self)
+        self.name_label.setFont(QFont("Arial", 40))
         self.name_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(self.name_label, alignment=Qt.AlignCenter)
 
         # Buttons layout
         button_layout = QVBoxLayout()
-
-        self.change_name_button = self.create_styled_button("Сменить имя")
-        self.change_name_button.setFixedSize(295, 35)
-        self.change_name_button.clicked.connect(self.change_name)
-        button_layout.addWidget(self.change_name_button, alignment=Qt.AlignCenter)
-
         self.change_avatar_button = self.create_styled_button("Сменить аватарку")
         self.change_avatar_button.setFixedSize(295, 35)
         self.change_avatar_button.clicked.connect(self.change_avatar)
@@ -123,33 +154,12 @@ class UserProfile(QMainWindow):
 
         layout.addLayout(button_layout)
 
-    def change_name(self):
-        """Open a dialog to change the username."""
-        dialog = QDialog(self)
-        dialog.setWindowTitle("Сменить имя")
-
-        layout = QVBoxLayout(dialog)
-        input_field = QLineEdit(self)
-        input_field.setPlaceholderText("Введите новое имя")
-        layout.addWidget(input_field)
-
-        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        layout.addWidget(buttons)
-
-        def on_accept():
-            new_name = input_field.text()
-            if new_name.strip():
-                self.name_label.setText(new_name)
-            dialog.accept()
-
-        buttons.accepted.connect(on_accept)
-        buttons.rejected.connect(dialog.reject)
-
-        dialog.exec_()
+   
 
     def change_avatar(self):
         """Open a file dialog to change the user avatar."""
         file_path, _ = QFileDialog.getOpenFileName(self, "Выберите изображение", "", "Images (*.png *.jpg *.jpeg *.bmp)")
+        print(file_path)
         if file_path:
             pixmap = QPixmap(file_path)
             if pixmap.isNull():
@@ -165,3 +175,21 @@ class UserProfile(QMainWindow):
             painter.drawEllipse(QRect(0, 0, size, size))
             painter.end()
             self.avatar_label.setPixmap(rounded_pixmap.scaled(200, 200, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+
+
+            try:
+                # Open the image file
+                files = {"avatar": open(file_path, "rb")}
+                data = {
+                    'username': self.username
+                }
+
+                # Send POST request to add movie
+                response = requests.post('https://tochka2802.pythonanywhere.com/users/setAvatar', data=data, files=files)
+                print(response.status_code, "status code")
+
+                if response.status_code == 200 or response.status_code == 201:
+                    self.accept()  
+                        
+            except Exception as e:
+                print(f"An error occurred: {e}")

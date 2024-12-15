@@ -2,10 +2,9 @@ from PyQt5.QtWidgets import (
     QMainWindow, QListWidget, QPushButton, QDialog, QVBoxLayout, 
     QHBoxLayout, QLabel, QWidget, QMessageBox
 )
-from PyQt5.QtGui import QPalette, QBrush, QLinearGradient, QColor, QPixmap
+from PyQt5.QtGui import QPalette, QBrush, QLinearGradient, QColor, QPixmap, QPainter, QRegion, QPen
 from PyQt5.QtCore import Qt
 import requests
-from io import BytesIO
 from windows.addSeansWindow import AddSeansWindow
 from windows.seatsWindow import SeatsWindow
 from windows.moveInfoWindow import MovieInfoWindow
@@ -20,6 +19,7 @@ class CinemaWindow(QMainWindow):
         self.setWindowTitle("Кинотеатр")
         self.resize(800, 600)
         self.username = username
+        self.original_avatar = None  # Store original avatar
         # Create widgets
         self.movie_list = QListWidget()
         self.session_list = QListWidget()
@@ -36,6 +36,7 @@ class CinemaWindow(QMainWindow):
 
         self.delete_movie_button.hide()
         self.add_session_button.hide()
+        self.buy_button.hide()
         self.info_button.hide()
 
         self.history_button.setProperty("margin", "true")
@@ -48,22 +49,15 @@ class CinemaWindow(QMainWindow):
         self.delete_movie_button.clicked.connect(self.delete_movie)
 
         # Profile Button (Circular)
-        try:
-            profile_pixmap = QPixmap()
-            # Загружаем данные изображения через requests
-            response = requests.post("https://tochka2802.pythonanywhere.com/users/getAvatar", json={"username": self.username})
-            avatar_url = response.json().get("avatar")
-            print(avatar_url)
-            profile_pixmap.loadFromData(requests.get("https://tochka2802.pythonanywhere.com/" + avatar_url).content)
-        except Exception as e:
-            print(f"Ошибка загрузки изображения: {e}")
-
-        profile_pixmap.mousePressEvent = self.open_profile_window
+        self.profile_label = QLabel()
+        self.profile_label.setFixedSize(40, 40)
+        self.update_avatar()
+        self.profile_label.mousePressEvent = self.open_profile_window
 
         # Top bar layout for profile button
         top_bar_layout = QHBoxLayout()
         top_bar_layout.addStretch()
-        top_bar_layout.addWidget(profile_pixmap)
+        top_bar_layout.addWidget(self.profile_label)
 
         # Layout for movies and sessions
         movies_layout = QVBoxLayout()
@@ -101,6 +95,7 @@ class CinemaWindow(QMainWindow):
         central_widget.setLayout(main_layout)
         self.setCentralWidget(central_widget)
 
+
         # Set gradient background
         self.set_gradient_background()
         self.movie_list.itemClicked.connect(self.onRowSelection)
@@ -122,11 +117,11 @@ class CinemaWindow(QMainWindow):
 
     def onRowSelection(self, item):
         self.display_sessions(item)
-
+        self.info_button.show()
+        self.buy_button.show()
         if self.username == "admin":
             self.delete_movie_button.show()
             self.add_session_button.show()
-            self.info_button.show()
 
     def create_styled_button(self, text):
         """Helper method to create styled buttons."""
@@ -254,9 +249,73 @@ class CinemaWindow(QMainWindow):
         self.history_window = HistoryWindow(self.username)
         self.history_window.show()
 
-    def open_profile_window(self):
+    def open_profile_window(self, _):
         """Open the profile window."""
         if not hasattr(self, 'user_profile'):
-            self.user_profile = UserProfile()
-        self.user_profile.show()
-    
+            # Pass the original avatar instead of the scaled one
+            user_profile = UserProfile(self.username, self.original_avatar, self)
+            if user_profile.exec_() == QDialog.Accepted:
+                self.update_avatar()
+
+    def update_avatar(self):
+        """Update user's avatar from server."""
+        try:
+            response = requests.post("https://tochka2802.pythonanywhere.com/users/getAvatar", json={"username": self.username})
+            print(response.status_code, response.json())
+            if response.ok:
+                avatar_path = response.json().get("avatar")
+                base_url = "https://tochka2802.pythonanywhere.com/"
+                full_avatar_url = base_url + avatar_path
+                
+                # Download the image
+                img_response = requests.get(full_avatar_url)
+                if img_response.ok:
+                    pixmap = QPixmap()
+                    pixmap.loadFromData(img_response.content)
+                    self.original_avatar = pixmap  # Store original avatar
+                    
+                    # Scale to much larger size first for better quality
+                    size = 400  # 4x final size for better quality
+                    scaled_pixmap = pixmap.scaled(size, size, Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation)
+                    
+                    # Create high quality mask
+                    mask = QPixmap(size, size)
+                    mask.fill(Qt.transparent)
+                    painter = QPainter(mask)
+                    painter.setRenderHint(QPainter.Antialiasing, True)
+                    painter.setRenderHint(QPainter.SmoothPixmapTransform, True)
+                    painter.setRenderHint(QPainter.HighQualityAntialiasing, True)
+                    
+                    # Use composition mode for smoother edges
+                    painter.setCompositionMode(QPainter.CompositionMode_Source)
+                    painter.setBrush(Qt.black)
+                    painter.setPen(QPen(Qt.black, 1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+                    painter.drawEllipse(0, 0, size, size)
+                    painter.end()
+                    
+                    # Apply mask with high quality settings
+                    result = QPixmap(size, size)
+                    result.fill(Qt.transparent)
+                    painter = QPainter(result)
+                    painter.setRenderHint(QPainter.Antialiasing, True)
+                    painter.setRenderHint(QPainter.SmoothPixmapTransform, True)
+                    painter.setRenderHint(QPainter.HighQualityAntialiasing, True)
+                    
+                    # Use composition mode for better blending
+                    painter.setCompositionMode(QPainter.CompositionMode_Source)
+                    painter.setClipRegion(QRegion(mask.mask()))
+                    painter.drawPixmap(0, 0, scaled_pixmap)
+                    painter.end()
+                    
+                    # Final scaling with high quality
+                    final_pixmap = result.scaled(40, 40, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                    
+                    self.profile_label.setPixmap(final_pixmap)
+                    self.profile_label.setStyleSheet("""
+                        QLabel {
+                            background: transparent;
+                            border-radius: 20px;
+                        }
+                    """)
+        except Exception as e:
+            print(f"Error updating avatar: {e}")
