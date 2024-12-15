@@ -148,6 +148,23 @@ class UserProfile(QDialog):
         self.change_avatar_button.clicked.connect(self.change_avatar)
         button_layout.addWidget(self.change_avatar_button, alignment=Qt.AlignCenter)
 
+        self.logout_button = self.create_styled_button("Выйти из аккаунта")
+        self.logout_button.setFixedSize(295, 35)
+        self.logout_button.setStyleSheet("""
+            QPushButton {
+                background-color: #FF0000;
+                color: white;
+                border: none;
+                padding: 10px;
+                border-radius: 10px;
+            }
+            QPushButton:hover {
+                background-color: #CC0000;
+            }
+        """)
+        self.logout_button.clicked.connect(self.logout)
+        button_layout.addWidget(self.logout_button, alignment=Qt.AlignCenter)
+
         self.back_button = self.create_styled_button("Назад")
         self.back_button.setFixedSize(295, 35)
         self.back_button.clicked.connect(self.close)
@@ -194,3 +211,15 @@ class UserProfile(QDialog):
                         
             except Exception as e:
                 print(f"An error occurred: {e}")
+
+    def logout(self):
+        # Close all open windows
+        for widget in QApplication.topLevelWidgets():
+            widget.close()
+        
+        # Import login window dynamically to avoid circular imports
+        from windows.login import LoginPage
+        
+        # Open login window
+        login_window = LoginPage()
+        login_window.show()

@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import (
     QMainWindow, QListWidget, QPushButton, QDialog, QVBoxLayout, 
     QHBoxLayout, QLabel, QWidget, QMessageBox
 )
-from PyQt5.QtGui import QPalette, QBrush, QLinearGradient, QColor, QPixmap, QPainter, QRegion, QPen
+from PyQt5.QtGui import QPalette, QBrush, QLinearGradient, QColor, QPixmap, QPainter, QRegion, QPen, QFont
 from PyQt5.QtCore import Qt
 import requests
 from windows.addSeansWindow import AddSeansWindow
@@ -52,7 +52,7 @@ class CinemaWindow(QMainWindow):
 
         # Profile Button (Circular)
         self.profile_label = QLabel()
-        self.profile_label.setFixedSize(40, 40)
+        self.profile_label.setFixedSize(50, 50)
         self.update_avatar()
         self.profile_label.mousePressEvent = self.open_profile_window
 
@@ -60,6 +60,17 @@ class CinemaWindow(QMainWindow):
         top_bar_layout = QHBoxLayout()
         top_bar_layout.addStretch()
         top_bar_layout.addWidget(self.profile_label)
+
+        # Username display
+        self.username_display = QLabel(self.username)
+        self.username_display.setStyleSheet("""
+            color: white; 
+            font-size: 18px; 
+            text-decoration: underline;
+        """)
+        self.username_display.mousePressEvent = self.open_profile_window
+
+        top_bar_layout.addWidget(self.username_display)
 
         # Layout for movies and sessions
         movies_layout = QVBoxLayout()
@@ -311,7 +322,7 @@ class CinemaWindow(QMainWindow):
                     painter.end()
                     
                     # Final scaling with high quality
-                    final_pixmap = result.scaled(40, 40, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                    final_pixmap = result.scaled(50, 50, Qt.KeepAspectRatio, Qt.SmoothTransformation)
                     
                     self.profile_label.setPixmap(final_pixmap)
                     self.profile_label.setStyleSheet("""
