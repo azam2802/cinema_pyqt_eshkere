@@ -123,14 +123,11 @@ class RegistrationPage(QWidget):
 
     def generate_captcha(self):
         """Generate a random captcha."""
-        # Generate a random 6-character string
         self.captcha_text = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
         
-        # Create captcha image
         image = ImageCaptcha(width=295, height=60)
         data = image.generate(self.captcha_text)
         
-        # Convert to QPixmap
         pixmap = QPixmap()
         pixmap.loadFromData(data.getvalue())
         

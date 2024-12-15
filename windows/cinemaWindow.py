@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import (
     QMainWindow, QListWidget, QPushButton, QDialog, QVBoxLayout, 
     QHBoxLayout, QLabel, QWidget, QMessageBox
 )
-from PyQt5.QtGui import QPalette, QBrush, QLinearGradient, QColor, QPixmap, QPainter, QRegion, QPen, QFont
+from PyQt5.QtGui import QPalette, QBrush, QLinearGradient, QColor, QPixmap, QPainter, QRegion, QPen
 from PyQt5.QtCore import Qt
 import requests
 from windows.addSeansWindow import AddSeansWindow
