@@ -19,7 +19,6 @@ class RegistrationPage(QWidget):
         self.setFixedSize(800, 600)
 
         self.snowfall_background = SnowfallBackground(self)
-        
         # Фоновое изображение
         self.background_label = QLabel(self)
         self.background_label.setPixmap(QPixmap("./img/back.jpg").scaled(
@@ -106,9 +105,20 @@ class RegistrationPage(QWidget):
 
         # Generate and display captcha
         self.generate_captcha()
+        self.snowfall_background.create_snowflakes()
+
+        self.snowfall_background.raise_()
 
         # Создаем snowfall после всех других элементов
-        self.snowfall_background.create_snowflakes()
+        self.title_label.raise_()
+        self.username_input.raise_()
+        self.password_input.raise_()
+        self.captcha_label.raise_()
+        self.captcha_input.raise_()
+        self.password_input_confirmation.raise_()
+        self.login_link.raise_()
+        self.register_button.raise_()
+        self.raise_()
 
 
     def generate_captcha(self):
@@ -117,7 +127,7 @@ class RegistrationPage(QWidget):
         self.captcha_text = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
         
         # Create captcha image
-        image = ImageCaptcha(width=295, height=100)
+        image = ImageCaptcha(width=295, height=60)
         data = image.generate(self.captcha_text)
         
         # Convert to QPixmap
