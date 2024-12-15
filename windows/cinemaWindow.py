@@ -2,14 +2,17 @@ from PyQt5.QtWidgets import (
     QMainWindow, QListWidget, QPushButton, QDialog, QVBoxLayout, 
     QHBoxLayout, QLabel, QWidget, QMessageBox
 )
-from PyQt5.QtGui import QPalette, QBrush, QLinearGradient, QColor
+from PyQt5.QtGui import QPalette, QBrush, QLinearGradient, QColor, QPixmap
 from PyQt5.QtCore import Qt
 import requests
+from io import BytesIO
+from windows.addSeansWindow import AddSeansWindow
 from windows.seatsWindow import SeatsWindow
 from windows.moveInfoWindow import MovieInfoWindow
 from windows.addMovieWIndow import AddMovieWindow
 from windows.profileWindow import UserProfile
 from windows.historyWIndow import HistoryWindow
+
 
 class CinemaWindow(QMainWindow):
     def __init__(self, username):
@@ -25,29 +28,42 @@ class CinemaWindow(QMainWindow):
         sessions_label = QLabel("Сеансы")
 
         self.buy_button = self.create_styled_button("Купить")
-        self.info_button = self.create_styled_button("Информация о фильме")
         self.history_button = self.create_styled_button("История")
         self.add_movie_button = self.create_styled_button("Добавить фильм")
+        self.info_button = self.create_styled_button("Информация о фильме")
+        self.add_session_button = self.create_styled_button("Добавить сеанс")
         self.delete_movie_button = self.create_styled_button("Удалить фильм")
+
+        self.delete_movie_button.hide()
+        self.add_session_button.hide()
+        self.info_button.hide()
+
+        self.history_button.setProperty("margin", "true")
 
         self.buy_button.clicked.connect(self.open_seats_window)
         self.info_button.clicked.connect(self.open_movie_info)
         self.history_button.clicked.connect(self.open_history_window)
         self.add_movie_button.clicked.connect(self.open_add_movie_window)
+        self.add_session_button.clicked.connect(self.open_add_session_window)
         self.delete_movie_button.clicked.connect(self.delete_movie)
 
         # Profile Button (Circular)
-        self.profile_button = QPushButton()
-        self.profile_button.setFixedSize(50, 50)
-        self.profile_button.setStyleSheet(
-            "background-color: gray; border-radius: 25px; border: none;"
-        )
-        self.profile_button.clicked.connect(self.open_profile_window)
+        try:
+            profile_pixmap = QPixmap()
+            # Загружаем данные изображения через requests
+            response = requests.post("https://tochka2802.pythonanywhere.com/users/getAvatar", json={"username": self.username})
+            avatar_url = response.json().get("avatar")
+            print(avatar_url)
+            profile_pixmap.loadFromData(requests.get("https://tochka2802.pythonanywhere.com/" + avatar_url).content)
+        except Exception as e:
+            print(f"Ошибка загрузки изображения: {e}")
+
+        profile_pixmap.mousePressEvent = self.open_profile_window
 
         # Top bar layout for profile button
         top_bar_layout = QHBoxLayout()
         top_bar_layout.addStretch()
-        top_bar_layout.addWidget(self.profile_button)
+        top_bar_layout.addWidget(profile_pixmap)
 
         # Layout for movies and sessions
         movies_layout = QVBoxLayout()
@@ -68,9 +84,10 @@ class CinemaWindow(QMainWindow):
         button_layout.setSpacing(5)
         button_layout.addStretch()
         button_layout.addWidget(self.buy_button, alignment=Qt.AlignCenter)
-        button_layout.addWidget(self.info_button, alignment=Qt.AlignCenter)
         button_layout.addWidget(self.history_button, alignment=Qt.AlignCenter)
+        button_layout.addWidget(self.info_button, alignment=Qt.AlignCenter)
         button_layout.addWidget(self.add_movie_button, alignment=Qt.AlignCenter)
+        button_layout.addWidget(self.add_session_button, alignment=Qt.AlignCenter)
         button_layout.addWidget(self.delete_movie_button, alignment=Qt.AlignCenter)
         button_layout.addStretch()
 
@@ -86,7 +103,8 @@ class CinemaWindow(QMainWindow):
 
         # Set gradient background
         self.set_gradient_background()
-        self.movie_list.itemClicked.connect(self.display_sessions)
+        self.movie_list.itemClicked.connect(self.onRowSelection)
+
 
         # Fetch movie data
         self.movies_data = {}
@@ -99,6 +117,16 @@ class CinemaWindow(QMainWindow):
         self.session_list.setStyleSheet(
             "border: 1px solid transparent; border-radius: 10px; background-color: rgba(0, 0, 0, 0.5); padding: 5px;"
         )
+
+ 
+
+    def onRowSelection(self, item):
+        self.display_sessions(item)
+
+        if self.username == "admin":
+            self.delete_movie_button.show()
+            self.add_session_button.show()
+            self.info_button.show()
 
     def create_styled_button(self, text):
         """Helper method to create styled buttons."""
@@ -134,7 +162,7 @@ class CinemaWindow(QMainWindow):
         palette.setBrush(QPalette.Window, QBrush(gradient))
         self.setPalette(palette)
 
-    def fetch_movies(self):
+    def fetch_movies(self, ):
         """Fetch movies from backend and update the movie list."""
         response = requests.get('https://tochka2802.pythonanywhere.com/movies/getMovies')
         print(response.json())
@@ -153,23 +181,20 @@ class CinemaWindow(QMainWindow):
         movie_name = item.text()
         sessions = self.movies_data.get(movie_name, {}).get("showTime", [])
         print(sessions)
-
         for session in sessions:
             self.session_list.addItem(session)
 
     def open_movie_info(self):
         """Open the movie information window."""
         selected_movie = self.movie_list.currentItem()
-        selected_session = self.session_list.currentItem()
 
-        if selected_movie and selected_session:
+        if selected_movie:
             movie_name = selected_movie.text()
-            session_time = selected_session.text()
             movie_info = self.movies_data.get(movie_name, {})
-            self.info_window = MovieInfoWindow(movie_name, session_time, movie_info)
+            self.info_window = MovieInfoWindow(movie_name, movie_info, self.username)
             self.info_window.show()
         else:
-            QMessageBox.warning(self, "Ошибка", "Пожалуйста, выберите фильм и сеанс.")
+            QMessageBox.warning(self, "Ошибка", "Пожалуйста, выберите фильм.")
 
     def open_seats_window(self):
         """Open the seats window."""
@@ -189,6 +214,14 @@ class CinemaWindow(QMainWindow):
         add_movie_window = AddMovieWindow(self)
         if add_movie_window.exec_() == QDialog.Accepted:
             self.fetch_movies()
+
+    def open_add_session_window(self):
+        """Open the Add Movie window."""
+        item = self.movie_list.currentItem()
+        add_movie_window = AddSeansWindow(item, self)
+        if add_movie_window.exec_() == QDialog.Accepted:
+            self.fetch_movies()
+            self.session_list.clear()
 
     def delete_movie(self):
         """Delete the selected movie."""
@@ -220,6 +253,7 @@ class CinemaWindow(QMainWindow):
         """Open the history window."""
         self.history_window = HistoryWindow(self.username)
         self.history_window.show()
+
     def open_profile_window(self):
         """Open the profile window."""
         if not hasattr(self, 'user_profile'):
