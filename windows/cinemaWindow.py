@@ -3,8 +3,10 @@ from PyQt5.QtWidgets import (
     QHBoxLayout, QLabel, QWidget, QMessageBox
 )
 from PyQt5.QtGui import QPalette, QBrush, QLinearGradient, QColor, QPixmap, QPainter, QRegion, QPen
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QUrl
+from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
 import requests
+import os
 from windows.addSeansWindow import AddSeansWindow
 from windows.seatsWindow import SeatsWindow
 from windows.moveInfoWindow import MovieInfoWindow
@@ -20,6 +22,14 @@ class CinemaWindow(QMainWindow):
         self.resize(800, 600)
         self.username = username
         self.original_avatar = None  # Store original avatar
+
+        # Setup background music
+        self.music_player = QMediaPlayer()
+        music_path = os.path.join(os.path.dirname(__file__), 'music.mp3')
+        self.music_player.setMedia(QMediaContent(QUrl.fromLocalFile(music_path)))
+        self.music_player.setVolume(50)  # Set volume to 50%
+        self.music_player.play()  # Start playing music when window opens
+
         # Create widgets
         self.movie_list = QListWidget()
         self.session_list = QListWidget()
@@ -128,6 +138,12 @@ class CinemaWindow(QMainWindow):
         self.snowfall_background.create_snowflakes() 
 
         self.raise_()
+
+    def closeEvent(self, event):
+        # Stop music when window is closed
+        self.music_player.stop()
+        super().closeEvent(event)
+
 
     def onRowSelection(self, item):
         self.display_sessions(item)
