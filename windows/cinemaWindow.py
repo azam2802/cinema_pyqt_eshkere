@@ -21,14 +21,13 @@ class CinemaWindow(QMainWindow):
         self.setWindowTitle("Кинотеатр")
         self.resize(800, 600)
         self.username = username
-        self.original_avatar = None  # Store original avatar
+        self.original_avatar = None  
 
-        # Setup background music
         self.music_player = QMediaPlayer()
         music_path = os.path.join(os.path.dirname(__file__), 'music.mp3')
         self.music_player.setMedia(QMediaContent(QUrl.fromLocalFile(music_path)))
-        self.music_player.setVolume(50)  # Set volume to 50%
-        self.music_player.play()  # Start playing music when window opens
+        self.music_player.play()
+        self.music_player.mediaStatusChanged.connect(self.handle_media_status)
 
         # Create widgets
         self.movie_list = QListWidget()
@@ -48,6 +47,8 @@ class CinemaWindow(QMainWindow):
 
         self.delete_movie_button.hide()
         self.add_session_button.hide()
+        if username != 'admin':
+            self.add_movie_button.hide()
         self.buy_button.hide()
         self.info_button.hide()
 
@@ -349,3 +350,8 @@ class CinemaWindow(QMainWindow):
                     """)
         except Exception as e:
             print(f"Error updating avatar: {e}")
+
+    def handle_media_status(self, status):
+        """Handle media status changed signal to restart music."""
+        if status == QMediaPlayer.EndOfMedia:
+            self.music_player.play()
