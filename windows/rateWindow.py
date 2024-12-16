@@ -2,14 +2,11 @@ from PyQt5.QtWidgets import QDialog, QVBoxLayout, QPushButton, QLabel, QHBoxLayo
 from PyQt5.QtGui import QLinearGradient, QPalette, QBrush, QColor, QFont
 from PyQt5.QtCore import Qt
 import requests
-from windows.snowflakes import SnowfallBackground
 
 class RateMovie(QDialog):
     def __init__(self, movie, username, parent=None):
         super().__init__(parent)
         self.movie = movie
-        self.snowfall_background = SnowfallBackground(self)
-        self.snowfall_background.create_snowflakes()
         self.setWindowTitle(f"Оценить {movie}")
         self.setFixedSize(350, 200)
         self.username = username
