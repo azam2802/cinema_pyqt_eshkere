@@ -52,9 +52,7 @@ class AddSeansWindow(QDialog):
             """
         )
 
-
     def set_gradient_background(self):
-        """Set a diagonal gradient background."""
         gradient = QLinearGradient(self.width(), self.height(), 0, 0)
         gradient.setColorAt(1.0, QColor(136, 0, 0, 100))
         gradient.setColorAt(0.5, QColor(136, 0, 0, 100))

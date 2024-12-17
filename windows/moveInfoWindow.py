@@ -19,30 +19,23 @@ class MovieInfoWindow(QWidget):
         self.username = username
         clients_info = self.fetch_movie_info(movie_name)
 
-        # Movie details
         name_label = QLabel(movie_name)
         name_label.setFont(QFont("Arial", 32))
         session_count_label = QLabel(f"Сеансы: {len(movie_info.get('showTime', []))}")
         seats_label = QLabel(f"Места: {movie_info.get('seats', 'Не указано')}")
 
-        # Poster setup
         poster_view = self.setup_poster(movie_info.get('poster', ''))
-
-        # Star rating
         star_rating_layout = self.create_star_rating()
         
 
-        # Schedule table
         self.table = self.create_schedule_table(clients_info)
 
-        # Back button
         back_button = QPushButton("Назад")
         back_button.clicked.connect(self.close)
 
         rate_button = QPushButton("Оценить")
         rate_button.clicked.connect(self.rate_movie)
 
-        # Layout setup
         main_layout = QVBoxLayout()
         info_layout = QHBoxLayout()
 
@@ -108,7 +101,6 @@ class MovieInfoWindow(QWidget):
         )
 
     def fetch_movie_info(self, movie_name):
-        """Fetch movie details from the server."""
         try:
             response = requests.post(
                 'https://tochka2802.pythonanywhere.com/movies/getMovieInfo',
@@ -121,7 +113,6 @@ class MovieInfoWindow(QWidget):
         return {}
 
     def setup_poster(self, poster_url):
-        """Setup poster display."""
         poster_frame = QFrame()
         poster_layout = QVBoxLayout(poster_frame)
 
@@ -150,13 +141,11 @@ class MovieInfoWindow(QWidget):
         return poster_frame
 
     def create_placeholder_pixmap(self):
-        """Create a placeholder pixmap for missing posters."""
         pixmap = QPixmap(100, 140)
         pixmap.fill(Qt.gray)
         return pixmap
 
     def create_star_rating(self):
-        """Create a star rating layout."""
         self.star_label = QLabel("оценка")
         self.star_label.setFont(QFont("Arial", 30))
         star_rating_layout = QHBoxLayout()
@@ -175,7 +164,6 @@ class MovieInfoWindow(QWidget):
         return star_rating_layout
 
     def create_schedule_table(self, clients_info):
-        """Create a table to display client information."""
         table = QTableWidget()
         table.setRowCount(len(clients_info))
         table.setColumnCount(4)
@@ -210,7 +198,6 @@ class MovieInfoWindow(QWidget):
         return table
 
     def set_gradient_background(self):
-        """Set a diagonal gradient background."""
         gradient = QLinearGradient(self.width(), self.height(), 0, 0)
         gradient.setColorAt(1.0, QColor(136, 0, 0, 100))
         gradient.setColorAt(0.5, QColor(136, 0, 0, 100))
@@ -221,7 +208,6 @@ class MovieInfoWindow(QWidget):
         self.setPalette(palette)
 
     def update_star_rating(self):
-        """Update the star rating based on user interaction."""
         response = requests.post("https://tochka2802.pythonanywhere.com/movies/getRating", json={"movie": self.movie_name})
         print(response)
         rating = round(float(response.json().get("rating")))

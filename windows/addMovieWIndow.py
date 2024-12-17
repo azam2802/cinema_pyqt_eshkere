@@ -11,7 +11,6 @@ class AddMovieWindow(QDialog):
         self.setWindowTitle("Добавить фильм")
         self.setFixedSize(300, 500)
 
-        # Create layout and widgets
         layout = QVBoxLayout()
 
         self.title_input = QLineEdit()
@@ -41,12 +40,10 @@ class AddMovieWindow(QDialog):
         self.snowfall_background.create_snowflakes()
         self.setLayout(layout)
 
-        # Connect signals
         self.add_button.clicked.connect(self.add_movie)
         self.set_gradient_background()
 
     def set_gradient_background(self):
-        """Set a diagonal gradient background."""
         gradient = QLinearGradient(self.width(), self.height(), 0, 0)
         gradient.setColorAt(1.0, QColor(136, 0, 0, 100))
         gradient.setColorAt(0.5, QColor(136, 0, 0, 100))
@@ -57,7 +54,6 @@ class AddMovieWindow(QDialog):
         self.setPalette(palette)
 
     def upload_image(self):
-        """Open file dialog to select an image."""
         options = QFileDialog.Options()
         options |= QFileDialog.ReadOnly
         file_path, _ = QFileDialog.getOpenFileName(self, "Выбрать изображение", "", "Images (*.png *.jpg *.jpeg *.gif)", options=options)
@@ -66,7 +62,7 @@ class AddMovieWindow(QDialog):
             pixmap = QPixmap(file_path)
             scaled_pixmap = pixmap.scaled(self.image_label.width(), self.image_label.height())
             self.image_label.setPixmap(scaled_pixmap)
-            self.image_label.setToolTip(file_path)  # Store the file path as a tooltip
+            self.image_label.setToolTip(file_path)
 
     def add_movie(self):
         title = self.title_input.text()
@@ -76,32 +72,26 @@ class AddMovieWindow(QDialog):
         print(image_path)
         files = {"poster": open(image_path, "rb")}
 
-        # Ensure the file path is valid before trying to open the file
         if not title or not showtime or not cost or not image_path:
             print("All fields are required")
             return
 
         try:
-            # Open the image file
             files = {"poster": open(image_path, "rb")}
             data = {
                 'title': title,
                 'showtime': showtime, 
                 'cost': cost
             }
-            # Prepare data
             print(showtime)
 
-            # Send POST request to add movie
             response = requests.post('https://tochka2802.pythonanywhere.com/movies/addMovie', json=data)
             print(response.status_code, "status code")
             response = requests.post('https://tochka2802.pythonanywhere.com/movies/addPoster', data={"title": data.get("title")}, files=files)
             print(response.status_code, "status code")
 
-            # Check if the server responded with JSON
-            
             if response.status_code == 200 or response.status_code == 201:
-                self.accept()  # Close the add movie window after successful add
+                self.accept()  
     
         except Exception as e:
             print(f"An error occurred: {e}")

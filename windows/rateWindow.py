@@ -70,7 +70,6 @@ class RateMovie(QDialog):
 
 
     def rate_movie(self):
-        """Update the star rating based on user interaction."""
         selected_rating = self.star_buttons.checkedId()
         self.star_label.setText(str(selected_rating))
         for i, button in enumerate(self.star_buttons.buttons()):
@@ -83,7 +82,6 @@ class RateMovie(QDialog):
 
 
     def set_gradient_background(self):
-        """Set a diagonal gradient background."""
         gradient = QLinearGradient(self.width(), self.height(), 0, 0)
         gradient.setColorAt(1.0, QColor(136, 0, 0, 100))
         gradient.setColorAt(0.5, QColor(136, 0, 0, 100))

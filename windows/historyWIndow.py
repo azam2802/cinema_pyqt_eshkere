@@ -15,16 +15,14 @@ class HistoryWindow(QMainWindow):
         self.snowfall_background = SnowfallBackground(self)
         self.snowfall_background.create_snowflakes()
         self.raise_()
-        # Set up the table widget
         self.table = QTableWidget(self)
         self.table.setColumnCount(4)  # Movie, Showtime, Price, Count, Status
         self.table.setHorizontalHeaderLabels(["Movie", "Showtime", "Seat", "Status"])
         self.table.horizontalHeader().setStretchLastSection(True)
-        self.table.setEditTriggers(QTableWidget.NoEditTriggers)  # Disable editing
+        self.table.setEditTriggers(QTableWidget.NoEditTriggers)  
         self.back_button = QPushButton()
         self.back_button.setText("Назад")
         self.back_button.clicked.connect(self.close)
-        # Layout
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.table)
         self.layout.addWidget(self.back_button)
@@ -52,13 +50,11 @@ class HistoryWindow(QMainWindow):
         container.setLayout(self.layout)
         self.setCentralWidget(container)
 
-        # Load data from API
         self.load_data()
         self.set_gradient_background()
 
     def load_data(self):
-        """Fetch user history from the API and populate the table."""
-        url = "https://tochka2802.pythonanywhere.com/users/getHistory"  # Corrected endpoint
+        url = "https://tochka2802.pythonanywhere.com/users/getHistory"  
         payload = {"username": self.username}
 
         try:
@@ -80,7 +76,6 @@ class HistoryWindow(QMainWindow):
             QMessageBox.critical(self, "Error", f"An unexpected error occurred: {e}")
 
     def set_gradient_background(self):
-            """Set a diagonal gradient background."""
             gradient = QLinearGradient(self.width(), self.height(), 0, 0)
             gradient.setColorAt(1.0, QColor(136, 0, 0, 100))
             gradient.setColorAt(0.5, QColor(136, 0, 0, 100))
@@ -92,15 +87,14 @@ class HistoryWindow(QMainWindow):
 
 
     def populate_table(self, history):
-        """Populate the table widget with history data."""
         row = 0
-        self.table.setRowCount(0)  # Reset the table before populating
+        self.table.setRowCount(0) 
         for movie, movie_history in history.items():
             for action, details in movie_history.items():
                 for showtime, seats_data in details.items():
                         self.table.insertRow(row)
                         self.table.setItem(row, 0, QTableWidgetItem(movie))
                         self.table.setItem(row, 1, QTableWidgetItem(showtime))
-                        self.table.setItem(row, 2, QTableWidgetItem(', '.join(seats_data)))  # Show the seat count
-                        self.table.setItem(row, 3, QTableWidgetItem(action.capitalize()))  # Display "Booked" or "Bought"
+                        self.table.setItem(row, 2, QTableWidgetItem(', '.join(seats_data)))  
+                        self.table.setItem(row, 3, QTableWidgetItem(action.capitalize()))  
                         row += 1

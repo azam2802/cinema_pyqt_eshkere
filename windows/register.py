@@ -14,30 +14,25 @@ class RegistrationPage(QWidget):
     def __init__(self):
         super().__init__()
 
-        # Настройка окна
         self.setWindowTitle("Регистрация")
         self.setFixedSize(800, 600)
 
         self.snowfall_background = SnowfallBackground(self)
-        # Фоновое изображение
         self.background_label = QLabel(self)
         self.background_label.setPixmap(QPixmap("./img/back.jpg").scaled(
             self.size(), Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation
         ))
         self.background_label.setGeometry(0, 0, 800, 600)
 
-        # Полупрозрачный затемняющий слой
         self.overlay = QLabel(self)
         self.overlay.setGeometry(0, 0, 800, 600)
         self.overlay.setStyleSheet("background-color: rgba(0, 0, 0, 0.5);")
 
-        # Текст "Регистрация"
         self.title_label = QLabel("Регистрация", self)
         self.title_label.setFont(QFont("Arial", 42))
         self.title_label.setStyleSheet("color: white;")
         self.title_label.setAlignment(Qt.AlignCenter)
 
-        # Поля ввода
         self.username_input = QLineEdit(self)
         self.username_input.setPlaceholderText("Имя пользователя")
         self.username_input.setFixedSize(295, 40)
@@ -58,7 +53,6 @@ class RegistrationPage(QWidget):
         self.password_input_confirmation.setAlignment(Qt.AlignCenter)
         self.password_input_confirmation.setStyleSheet("border-radius: 5px;")
 
-        # Captcha
         self.captcha_label = QLabel(self)
         self.captcha_label.setFixedSize(295, 100)
         self.captcha_label.setAlignment(Qt.AlignCenter)
@@ -69,7 +63,6 @@ class RegistrationPage(QWidget):
         self.captcha_input.setAlignment(Qt.AlignCenter)
         self.captcha_input.setStyleSheet("border-radius: 5px;")
 
-        # Кнопка регистрации
         self.register_button = QPushButton("Зарегистрироваться", self)
         self.register_button.setFixedSize(295, 40)
         self.register_button.setStyleSheet(
@@ -77,12 +70,10 @@ class RegistrationPage(QWidget):
         )
         self.register_button.clicked.connect(self.register)
 
-        # Кнопка назад
         self.login_link = QLabel('<a href="#">Войти</a>', self)
         self.login_link.setStyleSheet("color: lightblue;")
         self.login_link.setAlignment(Qt.AlignCenter)
 
-        # Компоновка элементов
         form_layout = QVBoxLayout()
         form_layout.setAlignment(Qt.AlignCenter)
         form_layout.addWidget(self.title_label)
@@ -95,7 +86,6 @@ class RegistrationPage(QWidget):
         form_layout.addWidget(self.register_button)
         form_layout.addWidget(self.login_link)
 
-        # Основной компоновщик для центрирования
         main_layout = QVBoxLayout(self)
         main_layout.addSpacerItem(QSpacerItem(0, 0, QSizePolicy.Minimum, QSizePolicy.Expanding))  # Верхний отступ
         main_layout.addLayout(form_layout)  # Центрируемая форма
@@ -103,13 +93,11 @@ class RegistrationPage(QWidget):
 
         self.login_link.linkActivated.connect(self.go_back_to_login)
 
-        # Generate and display captcha
         self.generate_captcha()
         self.snowfall_background.create_snowflakes()
 
         self.snowfall_background.raise_()
 
-        # Создаем snowfall после всех других элементов
         self.title_label.raise_()
         self.username_input.raise_()
         self.password_input.raise_()
@@ -122,7 +110,6 @@ class RegistrationPage(QWidget):
 
 
     def generate_captcha(self):
-        """Generate a random captcha."""
         self.captcha_text = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
         
         image = ImageCaptcha(width=295, height=60)
@@ -131,22 +118,18 @@ class RegistrationPage(QWidget):
         pixmap = QPixmap()
         pixmap.loadFromData(data.getvalue())
         
-        # Set captcha image
         self.captcha_label.setPixmap(pixmap)
 
     def register(self):
-        # Validate captcha first
         if self.captcha_input.text().upper() != self.captcha_text:
             QMessageBox.warning(self, 'Ошибка', 'Неверный код captcha')
-            self.generate_captcha()  # Regenerate captcha
+            self.generate_captcha()  
             return
 
-        # Обработка регистрации
         username = self.username_input.text()
         password = self.password_input.text()
         password_confirmation = self.password_input_confirmation.text()
 
-        # Отправка запроса на сервер Flask для регистрации
         if password != password_confirmation:
             QMessageBox.warning(self, 'Ошибка', 'Пароли не совпадают')
             return
@@ -156,10 +139,8 @@ class RegistrationPage(QWidget):
             'password': password
         })
 
-        # Печать содержимого ответа для диагностики
         print("Server response:", response.text)
 
-        # Обработка ответа от сервера
         try:
             response.json()
         except requests.exceptions.JSONDecodeError:
@@ -172,13 +153,11 @@ class RegistrationPage(QWidget):
         else:
             QMessageBox.warning(self, 'Ошибка', 'Ошибка регистрации')
 
-        # Очистка полей ввода
         self.username_input.clear()
         self.password_input.clear()
         self.password_input_confirmation.clear()
 
     def go_back_to_login(self):
-        # Создаем и показываем окно авторизации
         from windows.login import LoginPage
         self.login_page = LoginPage()
         self.login_page.show()

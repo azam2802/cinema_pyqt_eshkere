@@ -24,43 +24,34 @@ class SeatsWindow(QMainWindow):
         header_layout = QHBoxLayout()
         header_layout.setAlignment(Qt.AlignCenter)
 
-
         buy_ticket_label = QLabel("Купить билет")
         buy_ticket_label.setAlignment(Qt.AlignCenter)
         header_layout.addWidget(buy_ticket_label)
         buy_ticket_label.setFont(QFont("Montserrat", 30))
 
-
         header_layout.addStretch()
 
-        # Create a vertical layout for color labels
         color_labels_layout = QVBoxLayout()
-        color_labels_layout.setAlignment(Qt.AlignCenter)  # Align the labels vertically in the center
+        color_labels_layout.setAlignment(Qt.AlignCenter) 
         
-        # Create the color labels and add them to the vertical layout
         self.create_color_label(color_labels_layout, "Куплено", "green")
         self.create_color_label(color_labels_layout, "Забронировано", "orange")
         self.create_color_label(color_labels_layout, "Свободно", "white")
 
-        # Add the color labels vertical layout to the header layout
         header_layout.addLayout(color_labels_layout)
 
-        # Set the contents margins to add distance between labels
-        header_layout.setContentsMargins(50, 0, 0, 0)  # Adjust right margin for spacing
+        header_layout.setContentsMargins(50, 0, 0, 0)
 
         main_layout.addLayout(header_layout)
 
-        # Add Screen Label
         screen_label = QLabel("Экран")
         screen_label.setAlignment(Qt.AlignCenter)
         main_layout.addWidget(screen_label, alignment=Qt.AlignCenter)
 
-        # Create the seat rows layout
         self.seat_rows_layout = QVBoxLayout()
-        self.seat_rows_layout.setAlignment(Qt.AlignCenter)  # Center all rows
+        self.seat_rows_layout.setAlignment(Qt.AlignCenter) 
         main_layout.addLayout(self.seat_rows_layout)
 
-        # Buttons for booking and purchasing (arranged vertically and centered)
         button_layout = QVBoxLayout()
         self.reserve_button = QPushButton("Забронировать")
         self.buy_button = QPushButton("Купить")
@@ -90,16 +81,13 @@ class SeatsWindow(QMainWindow):
             """
             )
 
-        # Set central widget
         central_widget = QWidget()
         central_widget.setLayout(main_layout)
         self.setCentralWidget(central_widget)
 
-        # Create seats
         self.create_seats()
         self.color_seats()
 
-        # Connect signals
         self.reserve_button.clicked.connect(self.reserve_seat)
         self.buy_button.clicked.connect(self.show_buy_window)
         self.back_button.clicked.connect(self.close)
@@ -122,7 +110,6 @@ class SeatsWindow(QMainWindow):
 
 
     def set_gradient_background(self):
-        """Set a diagonal gradient background."""
         gradient = QLinearGradient(0, 0, self.width(), self.height())
         gradient.setColorAt(0.0, QColor(85, 85, 85, 50))
         gradient.setColorAt(0.5, QColor(136, 0, 0, 100))
@@ -134,7 +121,6 @@ class SeatsWindow(QMainWindow):
 
 
     def create_seats(self):
-        """Create a grid of seats."""
         self.seats = {}
         rows = [9, 11, 13, 15]  
         seat_number = 1  
@@ -156,7 +142,6 @@ class SeatsWindow(QMainWindow):
             self.seat_rows_layout.addLayout(row_layout)
 
     def create_color_label(self, layout, text, color):
-        """Create a color label for seat status."""
         label = QLabel()
         label.setFixedSize(20, 20)
         label.setStyleSheet(f"background-color: {color}; border: 1px solid black; color: black")
@@ -164,7 +149,6 @@ class SeatsWindow(QMainWindow):
         layout.addWidget(QLabel(text))
 
     def select_seat(self, seat_number):
-        """Select a seat."""
         self.selected_seat = seat_number
         for seat, button in self.seats.items():
             if seat == seat_number:
@@ -173,7 +157,6 @@ class SeatsWindow(QMainWindow):
                 button.setStyleSheet("background-color: white; border: 1px solid black; border-radius: 5px; color: black")
 
     def reserve_seat(self):
-        """Reserve the selected seat."""
         if self.selected_seat:
             button = self.seats[self.selected_seat]
             requests.post("https://tochka2802.pythonanywhere.com/users/addHistory", json={"username": self.username, "movie": self.movie_name, "showtime": self.session_time, "seat": str(self.selected_seat), "type": "booked"})
@@ -183,7 +166,6 @@ class SeatsWindow(QMainWindow):
 
 
     def show_buy_window(self):
-        """Show confirmation dialog for seat purchase."""
         if not self.selected_seat:
             QMessageBox.warning(self, "Ошибка", "Выберите место для покупки.")
             return

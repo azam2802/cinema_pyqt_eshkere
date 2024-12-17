@@ -29,7 +29,6 @@ class CinemaWindow(QMainWindow):
         self.music_player.play()
         self.music_player.mediaStatusChanged.connect(self.handle_media_status)
 
-        # Create widgets
         self.movie_list = QListWidget()
         self.session_list = QListWidget()
 
@@ -61,18 +60,15 @@ class CinemaWindow(QMainWindow):
         self.add_session_button.clicked.connect(self.open_add_session_window)
         self.delete_movie_button.clicked.connect(self.delete_movie)
 
-        # Profile Button (Circular)
         self.profile_label = QLabel()
         self.profile_label.setFixedSize(50, 50)
         self.update_avatar()
         self.profile_label.mousePressEvent = self.open_profile_window
 
-        # Top bar layout for profile button
         top_bar_layout = QHBoxLayout()
         top_bar_layout.addStretch()
         top_bar_layout.addWidget(self.profile_label)
 
-        # Username display
         self.username_display = QLabel(self.username)
         self.username_display.setStyleSheet("""
             color: white; 
@@ -83,12 +79,10 @@ class CinemaWindow(QMainWindow):
 
         top_bar_layout.addWidget(self.username_display)
 
-        # Layout for movies and sessions
         movies_layout = QVBoxLayout()
         movies_layout.addWidget(movies_label)
         movies_layout.addWidget(self.movie_list)
 
-        # Layout for sessions
         sessions_layout = QVBoxLayout()
         sessions_layout.addWidget(sessions_label)
         sessions_layout.addWidget(self.session_list)
@@ -97,7 +91,6 @@ class CinemaWindow(QMainWindow):
         lists_layout.addLayout(movies_layout)
         lists_layout.addLayout(sessions_layout)
 
-        # Layout for buttons
         button_layout = QVBoxLayout()
         button_layout.setSpacing(5)
         button_layout.addStretch()
@@ -109,7 +102,6 @@ class CinemaWindow(QMainWindow):
         button_layout.addWidget(self.delete_movie_button, alignment=Qt.AlignCenter)
         button_layout.addStretch()
 
-        # Main layout
         main_layout = QVBoxLayout()
         main_layout.addLayout(top_bar_layout)
         main_layout.addLayout(lists_layout)
@@ -119,17 +111,12 @@ class CinemaWindow(QMainWindow):
         central_widget.setLayout(main_layout)
         self.setCentralWidget(central_widget)
 
-
-        # Set gradient background
         self.set_gradient_background()
         self.movie_list.itemClicked.connect(self.onRowSelection)
 
-
-        # Fetch movie data
         self.movies_data = {}
         self.fetch_movies()
 
-        # Apply styles to lists
         self.movie_list.setStyleSheet(
             "border: 1px solid transparent; border-radius: 10px; background-color: rgba(0, 0, 0, 0.5); padding: 5px;"
         )
@@ -141,10 +128,8 @@ class CinemaWindow(QMainWindow):
         self.raise_()
 
     def closeEvent(self, event):
-        # Stop music when window is closed
         self.music_player.stop()
         super().closeEvent(event)
-
 
     def onRowSelection(self, item):
         self.display_sessions(item)
@@ -155,7 +140,6 @@ class CinemaWindow(QMainWindow):
             self.add_session_button.show()
 
     def create_styled_button(self, text):
-        """Helper method to create styled buttons."""
         button = QPushButton(text)
         button.setFixedSize(295, 35)
         button.setStyleSheet(
@@ -178,7 +162,6 @@ class CinemaWindow(QMainWindow):
         return button
 
     def set_gradient_background(self):
-        """Set a diagonal gradient background."""
         gradient = QLinearGradient(self.width(), self.height(), 0, 0)
         gradient.setColorAt(1.0, QColor(136, 0, 0, 100))
         gradient.setColorAt(0.5, QColor(136, 0, 0, 100))
@@ -189,7 +172,6 @@ class CinemaWindow(QMainWindow):
         self.setPalette(palette)
 
     def fetch_movies(self, ):
-        """Fetch movies from backend and update the movie list."""
         response = requests.get('https://tochka2802.pythonanywhere.com/movies/getMovies')
         print(response.json())
         if response.status_code == 200:
@@ -202,7 +184,6 @@ class CinemaWindow(QMainWindow):
             print("Error fetching movie data")
 
     def display_sessions(self, item):
-        """Display sessions for the selected movie."""
         self.session_list.clear()
         movie_name = item.text()
         sessions = self.movies_data.get(movie_name, {}).get("showTime", [])
@@ -211,7 +192,6 @@ class CinemaWindow(QMainWindow):
             self.session_list.addItem(session)
 
     def open_movie_info(self):
-        """Open the movie information window."""
         selected_movie = self.movie_list.currentItem()
 
         if selected_movie:
@@ -223,7 +203,6 @@ class CinemaWindow(QMainWindow):
             QMessageBox.warning(self, "Ошибка", "Пожалуйста, выберите фильм.")
 
     def open_seats_window(self):
-        """Open the seats window."""
         selected_movie = self.movie_list.currentItem()
         selected_session = self.session_list.currentItem()
 
@@ -236,13 +215,11 @@ class CinemaWindow(QMainWindow):
             QMessageBox.warning(self, "Ошибка", "Пожалуйста, выберите фильм и сеанс.")
 
     def open_add_movie_window(self):
-        """Open the Add Movie window."""
         add_movie_window = AddMovieWindow(self)
         if add_movie_window.exec_() == QDialog.Accepted:
             self.fetch_movies()
 
     def open_add_session_window(self):
-        """Open the Add Movie window."""
         item = self.movie_list.currentItem()
         add_movie_window = AddSeansWindow(item, self)
         if add_movie_window.exec_() == QDialog.Accepted:
@@ -250,7 +227,6 @@ class CinemaWindow(QMainWindow):
             self.session_list.clear()
 
     def delete_movie(self):
-        """Delete the selected movie."""
         selected_movie = self.movie_list.currentItem()
         if not selected_movie:
             QMessageBox.warning(self, "Ошибка", "Пожалуйста, выберите фильм для удаления.")
@@ -276,20 +252,16 @@ class CinemaWindow(QMainWindow):
                 QMessageBox.warning(self, "Ошибка", "Не удалось удалить фильм.")
 
     def open_history_window(self):
-        """Open the history window."""
         self.history_window = HistoryWindow(self.username)
         self.history_window.show()
 
     def open_profile_window(self, _):
-        """Open the profile window."""
         if not hasattr(self, 'user_profile'):
-            # Pass the original avatar instead of the scaled one
             user_profile = UserProfile(self.username, self.original_avatar, self)
             if user_profile.exec_() == QDialog.Accepted:
                 self.update_avatar()
 
     def update_avatar(self):
-        """Update user's avatar from server."""
         try:
             response = requests.post("https://tochka2802.pythonanywhere.com/users/getAvatar", json={"username": self.username})
             print(response.status_code, response.json())
@@ -298,18 +270,15 @@ class CinemaWindow(QMainWindow):
                 base_url = "https://tochka2802.pythonanywhere.com/"
                 full_avatar_url = base_url + avatar_path
                 
-                # Download the image
                 img_response = requests.get(full_avatar_url)
                 if img_response.ok:
                     pixmap = QPixmap()
                     pixmap.loadFromData(img_response.content)
-                    self.original_avatar = pixmap  # Store original avatar
+                    self.original_avatar = pixmap
                     
-                    # Scale to much larger size first for better quality
-                    size = 400  # 4x final size for better quality
+                    size = 400  
                     scaled_pixmap = pixmap.scaled(size, size, Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation)
                     
-                    # Create high quality mask
                     mask = QPixmap(size, size)
                     mask.fill(Qt.transparent)
                     painter = QPainter(mask)
@@ -317,14 +286,12 @@ class CinemaWindow(QMainWindow):
                     painter.setRenderHint(QPainter.SmoothPixmapTransform, True)
                     painter.setRenderHint(QPainter.HighQualityAntialiasing, True)
                     
-                    # Use composition mode for smoother edges
                     painter.setCompositionMode(QPainter.CompositionMode_Source)
                     painter.setBrush(Qt.black)
                     painter.setPen(QPen(Qt.black, 1, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
                     painter.drawEllipse(0, 0, size, size)
                     painter.end()
                     
-                    # Apply mask with high quality settings
                     result = QPixmap(size, size)
                     result.fill(Qt.transparent)
                     painter = QPainter(result)
@@ -332,13 +299,11 @@ class CinemaWindow(QMainWindow):
                     painter.setRenderHint(QPainter.SmoothPixmapTransform, True)
                     painter.setRenderHint(QPainter.HighQualityAntialiasing, True)
                     
-                    # Use composition mode for better blending
                     painter.setCompositionMode(QPainter.CompositionMode_Source)
                     painter.setClipRegion(QRegion(mask.mask()))
                     painter.drawPixmap(0, 0, scaled_pixmap)
                     painter.end()
                     
-                    # Final scaling with high quality
                     final_pixmap = result.scaled(50, 50, Qt.KeepAspectRatio, Qt.SmoothTransformation)
                     
                     self.profile_label.setPixmap(final_pixmap)
@@ -352,6 +317,5 @@ class CinemaWindow(QMainWindow):
             print(f"Error updating avatar: {e}")
 
     def handle_media_status(self, status):
-        """Handle media status changed signal to restart music."""
         if status == QMediaPlayer.EndOfMedia:
             self.music_player.play()
